@@ -1,8 +1,11 @@
 import asyncio
 import typing
-
+from app.core.config import get_config
 from app.database.databasehander import DatabaseQueryReturnMany, DatabaseQueryReturnOne, DatabaseQueryCommit
 from app.database.databasehander import database_handler, QueryType, QueryAnswer
+
+
+config = get_config()
 
 
 class DataLoaderFromDatabase:
@@ -34,7 +37,7 @@ class DataLoaderFromDatabase:
         self._data = None
         self._is_loading = True
         while self._is_loading:
-            await asyncio.sleep(0.05)  # todo add config
+            await asyncio.sleep(config.code.delay_async)
             if not self._is_loading:
                 return
 
@@ -69,7 +72,7 @@ class DataUploadingToDatabase:
         self._result = None
         self._is_loading = True
         while self._is_loading:
-            await asyncio.sleep(0.05)  # todo add config
+            await asyncio.sleep(config.code.delay_async)
             if not self._is_loading:
                 return
 

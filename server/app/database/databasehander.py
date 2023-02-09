@@ -5,7 +5,10 @@ from abc import ABC, abstractmethod
 from enum import Enum
 from sqlite3 import Connection
 
+from app.core.config import get_config
 from app.core.pathutils import get_database_root
+
+config = get_config()
 
 
 class QueryType(Enum):
@@ -82,7 +85,7 @@ class DatabaseHandler:
         self._is_running = True
 
         while True:
-            await asyncio.sleep(0.05)  # todo add config
+            await asyncio.sleep(config.code.delay_async)
             self.__process_requests()
 
     def __process_requests(self) -> None:

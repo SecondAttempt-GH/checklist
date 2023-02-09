@@ -22,6 +22,10 @@ def get_database_root() -> str:
     return os.path.join(get_project_root(), "data/checklist_database.db")
 
 
+def get_config_root() -> str:
+    return os.path.join(get_project_root(), "config.json")
+
+
 def load_env():
     load_dotenv(get_env_path())
 
