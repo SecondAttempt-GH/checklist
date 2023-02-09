@@ -1,10 +1,19 @@
-import uvicorn
+import asyncio
+
+from uvicorn import Config, Server
 
 from app.commands import app
+from app.database.databasehander import database_handler
 
 
 def main() -> None:
-    uvicorn.run(app, host="0.0.0.0", port=8000)
+    loop = asyncio.new_event_loop()
+    asyncio.run_coroutine_threadsafe(database_handler.run_process_requests(), loop)
+
+    config = Config(app=app, loop=loop)
+    server = Server(config)
+    loop.run_until_complete(server.serve())
+    loop.close()
 
 
 if __name__ == '__main__':

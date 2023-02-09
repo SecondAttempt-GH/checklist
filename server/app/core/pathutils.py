@@ -18,6 +18,10 @@ def get_image_from_static(name_image: str) -> str:
     return os.path.join(get_project_root(), f"static/{name_image}")
 
 
+def get_database_root() -> str:
+    return os.path.join(get_project_root(), "data/checklist_database.db")
+
+
 def load_env():
     load_dotenv(get_env_path())
 
