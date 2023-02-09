@@ -2,21 +2,38 @@ package com.example.proverka
 
 import android.app.Activity
 import android.app.AlertDialog
+import android.content.Context
 import android.content.Intent
+import android.graphics.Bitmap
+import android.net.Uri
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
+import android.os.Environment
 import android.provider.MediaStore
+import androidx.core.content.FileProvider
 import com.example.proverka.Adapters.FoodUnRedactableAdapter
 import com.example.proverka.databinding.ActivityMainBinding
 import com.example.proverka.databinding.PrintFoodBinding
 import com.example.proverka.model.FoodItem
 import com.example.proverka.model.FoodList
+import okhttp3.OkHttpClient
+import okhttp3.logging.HttpLoggingInterceptor
+import com.google.gson.Gson
+import okhttp3.MediaType.Companion.toMediaType
+import java.io.File
+import java.io.FileInputStream
+import java.io.FileNotFoundException
+import java.io.FileOutputStream
+import java.io.IOException
+import java.io.OutputStream
+import java.lang.ref.WeakReference
 
 class MainActivity : AppCompatActivity() {
 
     private lateinit var binding: ActivityMainBinding
     private lateinit var data: FoodList
     private lateinit var unredadapter: FoodUnRedactableAdapter
+    val contentType = "application/json; charset=utf-8".toMediaType()
 
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -74,10 +91,72 @@ class MainActivity : AppCompatActivity() {
             data?.getParcelableArrayListExtra<FoodItem>(EditActivity.FOOD_LIST)?.let { this.data.setFood(it) }
         }
         else if (requestCode == 100) {//ответ с камеры
-            print("пришло")
+
+            val imageBitmap = data?.extras?.get("data") as Bitmap
+
+//            val result1 = WeakReference(Bitmap.createScaledBitmap(imageBitmap,imageBitmap.height, imageBitmap.width,false).copy(Bitmap.Config.RGB_565,true))
+//            val bm = result1.get() as Bitmap
+//            val imageUri = saveImage(bm,this)
+
+            println(saveImage(imageBitmap))
+
+            val loggingInterceptor = HttpLoggingInterceptor()
+                .setLevel(HttpLoggingInterceptor.Level.BODY)
+            val gson = Gson()
+
+            val client = OkHttpClient.Builder()
+                .addInterceptor(loggingInterceptor)
+                .build()
+
+
         }
         unredadapter.notifyDataSetChanged()
     }
+
+    private fun saveImage(image: Bitmap): String? {
+        var savedImagePath: String? = null
+        val imageFileName = "JPEG_" + "FILE_NAME" + ".jpg"
+        println(Environment.DIRECTORY_PICTURES.toString())
+        val storageDir = File(Environment.DIRECTORY_PICTURES.toString())
+        var seccess = true
+        if (!storageDir.exists()) {
+            seccess = storageDir.mkdir()
+        }
+        if (seccess) {
+            val imageFile = File(storageDir, imageFileName)
+            println(imageFile.absolutePath)
+            savedImagePath = imageFile.absolutePath
+            try {
+                val fOut: OutputStream = FileOutputStream(imageFile)
+                image.compress(Bitmap.CompressFormat.JPEG, 100, fOut)
+                fOut.close()
+                return savedImagePath
+            } catch (e: java.lang.Exception) {
+                e.printStackTrace()
+            }
+        }
+        return savedImagePath
+    }
+
+//    private fun saveImage(image: Bitmap, context: Context): Uri? {
+//        val imagesFolder = File(context.cacheDir, "images")
+//        var uri: Uri
+//        try {
+//            imagesFolder.mkdir()
+//            val file = File(imagesFolder, "temp_image.jpg")
+//            val stream = FileOutputStream(file)
+//            image.compress(Bitmap.CompressFormat.JPEG,100,stream)
+//            stream.flush()
+//            stream.close()
+//            uri = FileProvider.getUriForFile(context.applicationContext, "com.example.proverka"+".provider",file)
+//            return uri
+//        } catch (e : FileNotFoundException) {
+//            e.printStackTrace()
+//        } catch (e: IOException) {
+//            e.printStackTrace()
+//        }
+//        return null
+//    }
 
     private fun createFood(name: String) {
         data.add(name)
