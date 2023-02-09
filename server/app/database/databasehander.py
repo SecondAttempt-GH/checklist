@@ -14,9 +14,14 @@ class QueryType(Enum):
     commit = 2
 
 
+class QueryAnswer(Enum):
+    failed = 0
+    success = 1
+
+
 class DatabaseQuery(ABC):
-    def __init__(self, command: str, action_on_success: typing.Callable) -> None:
-        self._command = command
+    def __init__(self, action_on_success: typing.Callable) -> None:
+        self._command: typing.Optional[str] = None
         self._action_on_success = action_on_success
 
     @property
@@ -24,7 +29,12 @@ class DatabaseQuery(ABC):
     def type(self) -> QueryType:
         pass
 
+    def set_command(self, command: str) -> str:
+        self._command = command
+
     def get_command(self) -> str:
+        if self._command is None:
+            raise Exception()  # todo filter error
         return self._command
 
     def success(self, result: typing.Any) -> None:
@@ -72,7 +82,7 @@ class DatabaseHandler:
         self._is_running = True
 
         while True:
-            await asyncio.sleep(0.5)
+            await asyncio.sleep(0.05)  # todo add config
             self.__process_requests()
 
     def __process_requests(self) -> None:
@@ -91,6 +101,7 @@ class DatabaseHandler:
                 result = cursor.fetchmany()
                 first_query.success(result)
             elif first_query.type == QueryType.commit:
+                first_query.success(QueryAnswer.success)
                 self._connector.commit()
             else:
                 print("Error.DatabaseHandler.ProcessRequests")  # todo error
