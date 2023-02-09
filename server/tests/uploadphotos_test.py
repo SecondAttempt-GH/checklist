@@ -1,6 +1,6 @@
 from starlette.testclient import TestClient
 
-from app.commands import app
+from app.my_requests.commands import app
 from app.core.pathutils import get_image_from_static
 
 

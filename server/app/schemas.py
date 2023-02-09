@@ -1,40 +1,36 @@
 import typing
 
-from fastapi import File
 from pydantic import BaseModel
 
 
-class RequestWithMandatoryUserId(BaseModel):
-    user_id: str
+class RequestWithMandatoryUserToken(BaseModel):
+    user_token: str
 
 
-class AuthorizationUserSchema(BaseModel):
-    user_id: typing.Optional[str]
+class AuthorizationUserSchema(RequestWithMandatoryUserToken):
     add_list_of_products: typing.Optional[bool]
 
 
-class PhotoUserSchema(RequestWithMandatoryUserId):
+class PhotoUserSchema(RequestWithMandatoryUserToken):
     pass
 
 
-class GetAllProductsSchema(RequestWithMandatoryUserId):
+class GetAllProductsSchema(RequestWithMandatoryUserToken):
     pass
 
 
-class GetSelectedProductsSchema(RequestWithMandatoryUserId):
+class GetSelectedProductsSchema(RequestWithMandatoryUserToken):
     pass
 
 
-class EditProductsSchema(RequestWithMandatoryUserId):
-    product_id: int
-    name_changed: bool
+class EditProductsSchema(RequestWithMandatoryUserToken):
+    old_name: str
     new_name: typing.Optional[str]
-    product_selected: bool
 
 
-class DeleteProductSchema(RequestWithMandatoryUserId):
-    product_id: int
+class DeleteProductSchema(RequestWithMandatoryUserToken):
+    product_name: str
 
 
-class AddProductSchema(RequestWithMandatoryUserId):
-    name: str
+class AddProductSchema(RequestWithMandatoryUserToken):
+    product_name: str

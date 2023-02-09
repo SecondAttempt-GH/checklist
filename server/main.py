@@ -2,7 +2,7 @@ import asyncio
 
 from uvicorn import Config, Server
 
-from app.commands import app
+from app.my_requests.commands import app
 from app.database.databasehander import database_handler
 
 

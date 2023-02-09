@@ -56,6 +56,26 @@ class DatabaseCommands:
         except NotFoundUserIdAndProductId:
             return False
 
+    async def try_get_all_products_user(self, user_token: str) -> (bool, typing.Optional[list]):
+        user_id = await self.__get_user_id(user_token)
+
+        if user_id is None:
+            return False, None
+
+        loader = DataLoaderFromDatabase(QueryType.return_many)
+        products = await loader.get_data_async(f"""select product from shopping_list where user_id = "{user_id}";""")
+        return True, products
+
+    async def try_get_all_selected_products_user(self, user_token: str) -> (bool, typing.Optional[list]):
+        user_id = await self.__get_user_id(user_token)
+
+        if user_id is None:
+            return False, None
+
+        loader = DataLoaderFromDatabase(QueryType.return_many)
+        products = await loader.get_data_async(f"""select product from shopping_list where user_id = "{user_id}" and is_purchased_product = True;""")
+        return True, products
+
     async def try_select_product(self, user_token: str, product_name: str) -> bool:
         """
             Пытаемся указать, что продукт был найден на фото и мы его вычеркиваем
@@ -108,3 +128,6 @@ class DatabaseCommands:
         loader = DataLoaderFromDatabase(QueryType.return_one)
         data = await loader.get_data_async(f"""select id from users where token = "{user_token}";""")
         return data
+
+
+database_commands = DatabaseCommands()
