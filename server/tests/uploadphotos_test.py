@@ -5,7 +5,7 @@ from app.core.pathutils import get_image_from_static
 
 
 def test_upload_photos() -> None:
-    path_image = get_image_from_static("test_image.png")
+    path_image = get_image_from_static("cheese_515.jpg")
 
     client = TestClient(app)
 

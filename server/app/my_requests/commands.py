@@ -3,6 +3,7 @@ import io
 from PIL import Image
 from fastapi import File, FastAPI, Depends
 
+from app.determinanttextofpricetag import DeterminantTextOfPriceTag
 from app.schemas import AddProductSchema
 from app.schemas import AuthorizationUserSchema
 from app.schemas import DeleteProductSchema
@@ -25,12 +26,17 @@ async def check_photo_with_list_of_products(request: PhotoUserSchema = Depends()
     :return:
     """
     image_stream = io.BytesIO(photo_bytes)
-    image_file = Image.open(image_stream)
+    image = Image.open(image_stream)
+    determinant = DeterminantTextOfPriceTag()
+    result = determinant.to_determine(photo_bytes)
+    if result.found_text is None:
+        return {"status": "error", "message": "Не удалось определить ценник и найти на нем текст"}
+
     return {
         "status": "success",
-        "size": image_file.size,
-        "format": image_file.format,
-        "user_id": request.user_token
+        "found_text": result.found_text
+        # "format": image_file.format,
+        # "user_id": request.user_token
     }
 
 

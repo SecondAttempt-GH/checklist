@@ -12,8 +12,14 @@ class Code(BaseModel):
     write_in_file_logs: bool
 
 
+class ML(BaseModel):
+    conf_threshold: float
+    nms_threshold: float
+
+
 class Config(BaseModel):
     code: Code
+    ml: ML
 
 
 __factory: typing.Optional[Config] = None

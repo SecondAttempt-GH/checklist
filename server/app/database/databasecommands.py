@@ -8,7 +8,7 @@ class NotFoundUserIdAndProductId(Exception):
 
 
 class DatabaseCommands:
-    def try_add_user(self, user_token: str) -> bool:
+    async def try_add_user(self, user_token: str) -> bool:
         user_id = await self.__get_user_id(user_token)
 
         if user_id is None:

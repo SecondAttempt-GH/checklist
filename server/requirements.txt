@@ -27,7 +27,9 @@ starlette==0.23.0
 tomli==2.0.1
 typing_extensions==4.4.0
 uvicorn==0.20.0
-uvloop==0.17.0
 watchfiles==0.18.1
 websockets==10.4
 zipp==3.12.1
+numpy~=1.21.6
+opencv-python~=4.7.0.68
+easyocr~=1.6.2

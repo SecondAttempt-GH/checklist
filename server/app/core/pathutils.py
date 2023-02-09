@@ -30,6 +30,18 @@ def get_logger_path() -> str:
     return os.path.join(get_project_root(), "static/logger.txt")
 
 
+def get_names_path() -> str:
+    return os.path.join(get_project_root(), "data/checklist.names")
+
+
+def get_weights_path() -> str:
+    return os.path.join(get_project_root(), "data/checklist-tiny_final.weights")
+
+
+def get_cfg_path() -> str:
+    return os.path.join(get_project_root(), "data/checklist-tiny.cfg")
+
+
 def load_env():
     load_dotenv(get_env_path())
 
