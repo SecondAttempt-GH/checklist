@@ -7,10 +7,6 @@ class RequestWithMandatoryUserToken(BaseModel):
     user_token: str
 
 
-class AuthorizationUserSchema(RequestWithMandatoryUserToken):
-    add_list_of_products: typing.Optional[bool]
-
-
 class PhotoUserSchema(RequestWithMandatoryUserToken):
     pass
 

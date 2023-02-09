@@ -1,8 +1,9 @@
 from fastapi import File, FastAPI, Depends
 
 from app.determinanttextofpricetag import DeterminantTextOfPriceTag
+from app.my_requests.answerbuilder import AnswerBuilder, AnswerStatuses
 from app.schemas import AddProductSchema
-from app.schemas import AuthorizationUserSchema
+from app.core.authorizationutils import generate_token
 from app.schemas import DeleteProductSchema
 from app.schemas import EditProductsSchema
 from app.schemas import GetAllProductsSchema
@@ -36,7 +37,7 @@ async def check_photo_with_list_of_products(request: PhotoUserSchema = Depends()
 
 
 @app.post("/authorization_user")
-async def authorization_user(request: AuthorizationUserSchema):
+async def authorization_user():
     """
         Авторизация пользователя. Если не передан user_id, регистрируем пользователя
         Так же с можно получить все продукты, которые есть у пользователя
@@ -48,15 +49,15 @@ async def authorization_user(request: AuthorizationUserSchema):
     # Сначала попробуем добавить пользователя
     # Если получится, он добавиться в БД, в противном случае ничего не добавиться)
     # Далее смотрим, нужен ли клиенту список продуктов, если нужен достаем из БД и возвращаем
-    is_add_new_user = database_commands.try_add_user(request.user_token)
-
-    if request.add_list_of_products is None or request.add_list_of_products is False:
-        return {"status": "success", "message": {"is_new_user": is_add_new_user, "products": None}}
-
-    state, products = await database_commands.try_get_all_products_user(request.user_token)
-    if state:
-        return {"status": "success", "message": {"is_new_user": is_add_new_user, "products": products}}
-    return {"status": "error", "message": "Не удалось получить список продуктов"}
+    created_token = generate_token()
+    is_add_new_user = database_commands.try_add_user(created_token)
+    answer = AnswerBuilder()
+    if is_add_new_user:
+        answer.set_status(AnswerStatuses.success).\
+            set_comment("Новый пользователь добавлен в БД").\
+            add_value("token", created_token)
+        return answer.get_result()
+    return answer.set_status(AnswerStatuses.error).set_status("Не удалось добавить пользователя в БД").get_result()
 
 
 @app.post("/get_all_products")
