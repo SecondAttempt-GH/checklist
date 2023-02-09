@@ -24,7 +24,7 @@ async def check_photo_with_list_of_products(request: PhotoUserSchema = Depends()
     :return:
     """
     answer = AnswerBuilder()
-    condition, products = database_commands.try_get_all_products_user(request.user_token)
+    condition, products = await database_commands.try_get_all_products_user(request.user_token)
     if not condition:
         answer.set_status(AnswerStatuses.error).set_comment("Не удалось получить данные из БД")
         return answer.get_result()
@@ -68,14 +68,14 @@ async def authorization_user():
     # Если получится, он добавиться в БД, в противном случае ничего не добавиться)
     # Далее смотрим, нужен ли клиенту список продуктов, если нужен достаем из БД и возвращаем
     created_token = generate_token()
-    is_add_new_user = database_commands.try_add_user(created_token)
+    is_add_new_user = await database_commands.try_add_user(created_token)
     answer = AnswerBuilder()
     if is_add_new_user:
         answer.set_status(AnswerStatuses.success). \
             set_comment("Новый пользователь добавлен в БД"). \
             add_value("token", created_token)
         return answer.get_result()
-    return answer.set_status(AnswerStatuses.error).set_status("Не удалось добавить пользователя в БД").get_result()
+    return answer.set_status(AnswerStatuses.error).set_comment("Не удалось добавить пользователя в БД").get_result()
 
 
 @app.post("/get_all_products")

@@ -11,7 +11,7 @@ class DatabaseCommands:
     async def try_add_user(self, user_token: str) -> bool:
         user_id = await self.__get_user_id(user_token)
 
-        if user_id is None:
+        if user_id is not None:
             my_logger.info(f"Пользователь ({user_token}) уже есть в БД", "DatabaseCommands.TryAddUser")
             return False
 
@@ -65,8 +65,8 @@ class DatabaseCommands:
             my_logger.info(f"Пользователя ({user_token}) нет в БД", "DatabaseCommands.TryGetAllProductsUser")
             return False, None
 
-        loader = DataLoaderFromDatabase(QueryType.return_many)
-        products = await loader.get_data_async(f"""select product from shopping_list where user_id = "{user_id}";""")
+        loader = DataLoaderFromDatabase(QueryType.return_all)
+        products = await loader.get_data_async(f"""select product from shopping_list where user_id = {user_id};""")
         return True, products
 
     async def try_get_all_selected_products_user(self, user_token: str) -> (bool, typing.Optional[list]):
@@ -76,8 +76,8 @@ class DatabaseCommands:
             my_logger.info(f"Пользователя ({user_token}) нет в БД", "DatabaseCommands.TryGetAllSelectedProductsUser")
             return False, None
 
-        loader = DataLoaderFromDatabase(QueryType.return_many)
-        products = await loader.get_data_async(f"""select product from shopping_list where user_id = "{user_id}" and is_purchased_product = True;""")
+        loader = DataLoaderFromDatabase(QueryType.return_all)
+        products = await loader.get_data_async(f"""select product from shopping_list where user_id = {user_id} and is_purchased_product = True;""")
         return True, products
 
     async def try_select_product(self, user_token: str, product_name: str) -> bool:

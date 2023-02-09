@@ -14,7 +14,7 @@ config = get_config()
 
 class QueryType(Enum):
     return_one = 0
-    return_many = 1
+    return_all = 1
     commit = 2
 
 
@@ -42,9 +42,6 @@ class DatabaseQuery(ABC):
         return self._command
 
     def success(self, result: typing.Any) -> None:
-        if self.type == QueryType.commit:
-            return
-
         self._action_on_success(result)
 
 
@@ -66,7 +63,7 @@ class DatabaseQueryReturnMany(DatabaseQuery):
 
     @property
     def type(self) -> QueryType:
-        return QueryType.return_many
+        return QueryType.return_all
 
 
 class DatabaseHandler:
@@ -101,12 +98,15 @@ class DatabaseHandler:
             if first_query.type == QueryType.return_one:
                 result = cursor.fetchone()
                 first_query.success(result)
-            elif first_query.type == QueryType.return_many:
-                result = cursor.fetchmany()
+                my_logger.info("Запрос с получением одного значения завершен")
+            elif first_query.type == QueryType.return_all:
+                result = cursor.fetchall()
                 first_query.success(result)
+                my_logger.info("Запрос с получением множества значений завершен")
             elif first_query.type == QueryType.commit:
-                first_query.success(QueryAnswer.success)
                 self._connector.commit()
+                first_query.success(QueryAnswer.success)
+                my_logger.info("Запрос с сохранением результата завершен")
             else:
                 my_logger.warning("Не верный тип запроса")
             self._queue.remove(first_query)
