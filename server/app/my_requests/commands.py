@@ -1,16 +1,16 @@
 from fastapi import File, FastAPI, Depends
 
+from app.algorithmforcomparingoffers import AlgorithmForComparingOffers
+from app.core.authorizationutils import generate_token
+from app.database.databasecommands import database_commands
 from app.determinanttextofpricetag import DeterminantTextOfPriceTag
 from app.my_requests.answerbuilder import AnswerBuilder, AnswerStatuses
 from app.schemas import AddProductSchema
-from app.core.authorizationutils import generate_token
 from app.schemas import DeleteProductSchema
 from app.schemas import EditProductsSchema
 from app.schemas import GetAllProductsSchema
 from app.schemas import GetSelectedProductsSchema
 from app.schemas import PhotoUserSchema
-
-from app.database.databasecommands import database_commands
 
 app = FastAPI()
 
@@ -23,17 +23,35 @@ async def check_photo_with_list_of_products(request: PhotoUserSchema = Depends()
     :param photo_bytes:
     :return:
     """
-    determinant = DeterminantTextOfPriceTag()
-    result = determinant.to_determine(photo_bytes)
-    if result.found_text is None:
-        return {"status": "error", "message": "Не удалось определить ценник и найти на нем текст"}
+    answer = AnswerBuilder()
+    condition, products = database_commands.try_get_all_products_user(request.user_token)
+    if not condition:
+        answer.set_status(AnswerStatuses.error).set_comment("Не удалось получить данные из БД")
+        return answer.get_result()
 
-    return {
-        "status": "success",
-        "found_text": result.found_text
-        # "format": image_file.format,
-        # "user_id": request.user_token
-    }
+    determinant = DeterminantTextOfPriceTag()
+    result_determine = determinant.to_determine(photo_bytes)
+
+    if result_determine.found_text is None:
+        answer.set_status(AnswerStatuses.error). \
+            set_comment("Не удалось найти текст на изображение"). \
+            add_value("image", "None")
+        return answer.get_result()
+
+    algorithm = AlgorithmForComparingOffers()
+    for product in products:
+        coincidence = algorithm.check(product, result_determine.found_text)
+        if coincidence:
+            answer.set_status(AnswerStatuses.success). \
+                set_comment(f"Продукт {product} вычеркнут из списка"). \
+                add_value("product", product). \
+                add_value("found_text", result_determine.found_text). \
+                add_value("time_spent", result_determine.time_spent)
+            return answer.get_result()
+    answer.set_status(AnswerStatuses.error). \
+        set_comment(
+        f"Не удалось найти продукт ({result_determine.found_text}) в списках пользователя ({request.user_token})")
+    return answer.get_result()
 
 
 @app.post("/authorization_user")
@@ -53,8 +71,8 @@ async def authorization_user():
     is_add_new_user = database_commands.try_add_user(created_token)
     answer = AnswerBuilder()
     if is_add_new_user:
-        answer.set_status(AnswerStatuses.success).\
-            set_comment("Новый пользователь добавлен в БД").\
+        answer.set_status(AnswerStatuses.success). \
+            set_comment("Новый пользователь добавлен в БД"). \
             add_value("token", created_token)
         return answer.get_result()
     return answer.set_status(AnswerStatuses.error).set_status("Не удалось добавить пользователя в БД").get_result()

@@ -17,9 +17,17 @@ class ML(BaseModel):
     nms_threshold: float
 
 
+class PCA(BaseModel):
+    min_len_words: int
+    sub_token_len: int
+    threshold_word: float
+    threshold_sentence: float
+
+
 class Config(BaseModel):
     code: Code
     ml: ML
+    pca: PCA
 
 
 __factory: typing.Optional[Config] = None
