@@ -5,6 +5,7 @@ from abc import ABC, abstractmethod
 from enum import Enum
 from sqlite3 import Connection
 
+from app.mylogger import my_logger
 from app.core.config import get_config
 from app.core.pathutils import get_database_root
 
@@ -107,19 +108,19 @@ class DatabaseHandler:
                 first_query.success(QueryAnswer.success)
                 self._connector.commit()
             else:
-                print("Error.DatabaseHandler.ProcessRequests")  # todo error
+                my_logger.warning("Не верный тип запроса")
             self._queue.remove(first_query)
         self.__disconnect()
 
     def __connect(self) -> None:
         if self._connector is not None:
-            print("Error.DatabaseHandler.Connect")  # todo log
+            my_logger.warning("Подключение к базе данных уже установлено")
             return
         self._connector = sqlite3.connect(self._path)
 
     def __disconnect(self) -> None:
         if self._connector is None:
-            print("Error.DatabaseHandler.Disconnect")  # todo log
+            my_logger.warning("База данных еще не отключена")
             return
         self._connector.close()
         self._connector = None

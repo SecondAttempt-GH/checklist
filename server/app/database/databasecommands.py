@@ -1,5 +1,5 @@
 import typing
-
+from app.mylogger import my_logger
 from app.database.database_loaders import DataLoaderFromDatabase, DataUploadingToDatabase, QueryType
 
 
@@ -12,6 +12,7 @@ class DatabaseCommands:
         user_id = await self.__get_user_id(user_token)
 
         if user_id is None:
+            my_logger.info(f"Пользователь ({user_token}) уже есть в БД", "DatabaseCommands.TryAddUser")
             return False
 
         loader = DataUploadingToDatabase()
@@ -24,6 +25,7 @@ class DatabaseCommands:
 
         # Если не нашли пользователя или нашли продукт с таким именим
         if user_id is None or product_id is not None:
+            my_logger.info(f"Пользователя ({user_token}) нет в БД или продукт ({product_name}) есть в БД", "DatabaseCommands.TryAddProduct")
             return False
 
         loader = DataUploadingToDatabase()
@@ -60,6 +62,7 @@ class DatabaseCommands:
         user_id = await self.__get_user_id(user_token)
 
         if user_id is None:
+            my_logger.info(f"Пользователя ({user_token}) нет в БД", "DatabaseCommands.TryGetAllProductsUser")
             return False, None
 
         loader = DataLoaderFromDatabase(QueryType.return_many)
@@ -70,6 +73,7 @@ class DatabaseCommands:
         user_id = await self.__get_user_id(user_token)
 
         if user_id is None:
+            my_logger.info(f"Пользователя ({user_token}) нет в БД", "DatabaseCommands.TryGetAllSelectedProductsUser")
             return False, None
 
         loader = DataLoaderFromDatabase(QueryType.return_many)
@@ -102,6 +106,7 @@ class DatabaseCommands:
 
         # Если пользователя нет в БД
         if user_id is None:
+            my_logger.info(f"Пользователя ({user_token}) нет в БД", "DatabaseCommands.TryClearUserProducts")
             return False
 
         loader = DataUploadingToDatabase()
@@ -113,6 +118,7 @@ class DatabaseCommands:
         product_id = await self.__get_product_id(user_id, product_name)
 
         if user_id is None or product_id is None:
+            my_logger.warning(f"Пользователя ({user_token}) нет в БД или продукт ({product_name}) нет в БД", "DatabaseCommands.TryGetUserAndProductsIds")
             raise NotFoundUserIdAndProductId()
 
         return user_id, product_id

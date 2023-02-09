@@ -1,5 +1,7 @@
 {
   "code": {
-    "delay_async": 0.05
+    "delay_async": 0.05,
+    "overwrite_logs": true,
+    "write_in_file_logs": true
   }
 }

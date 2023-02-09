@@ -8,6 +8,8 @@ from app.core.pathutils import get_config_root
 
 class Code(BaseModel):
     delay_async: float
+    overwrite_logs: bool
+    write_in_file_logs: bool
 
 
 class Config(BaseModel):

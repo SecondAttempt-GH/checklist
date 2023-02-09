@@ -26,6 +26,10 @@ def get_config_root() -> str:
     return os.path.join(get_project_root(), "config.json")
 
 
+def get_logger_path() -> str:
+    return os.path.join(get_project_root(), "static/logger.txt")
+
+
 def load_env():
     load_dotenv(get_env_path())
 
