@@ -1,6 +1,3 @@
-import io
-
-from PIL import Image
 from fastapi import File, FastAPI, Depends
 
 from app.determinanttextofpricetag import DeterminantTextOfPriceTag
@@ -25,8 +22,6 @@ async def check_photo_with_list_of_products(request: PhotoUserSchema = Depends()
     :param photo_bytes:
     :return:
     """
-    image_stream = io.BytesIO(photo_bytes)
-    image = Image.open(image_stream)
     determinant = DeterminantTextOfPriceTag()
     result = determinant.to_determine(photo_bytes)
     if result.found_text is None:
