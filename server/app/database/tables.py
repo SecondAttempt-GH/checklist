@@ -10,6 +10,7 @@ shopping_list_table = """
         id integer primary key autoincrement,
         user_id int not null,
         product text not null,
+        product_quantity int not null default 1,
         is_purchased_product bool default false,
         foreign key (user_id) references users (id)
     );
