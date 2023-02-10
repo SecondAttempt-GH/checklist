@@ -70,6 +70,10 @@ async def authorization_user():
     # Если получится, он добавиться в БД, в противном случае ничего не добавиться)
     # Далее смотрим, нужен ли клиенту список продуктов, если нужен достаем из БД и возвращаем
     created_token = generate_token()
+    condition, all_tokens = await database_commands.try_get_all_tokens()
+    while condition and created_token in all_tokens:
+        created_token = generate_token()
+
     is_add_new_user = await database_commands.try_add_user(created_token)
     answer = AnswerBuilder()
     if is_add_new_user:

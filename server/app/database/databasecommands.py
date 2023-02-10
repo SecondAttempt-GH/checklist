@@ -161,6 +161,14 @@ class DatabaseCommands:
         return user_id, product_id
 
     @staticmethod
+    async def try_get_all_tokens() -> (bool, typing.Optional[list]):
+        loader = DataLoaderFromDatabase(QueryType.return_all)
+        tokens = await loader.get_data_async(f"""select token from users""")
+        if tokens is None or len(tokens) == 0:
+            return False, None
+        return True, tokens
+
+    @staticmethod
     async def __try_get_data_from_shopping_list(user_id: int, add_ids: bool = False, is_purchased_product: typing.Optional[bool] = None) -> (bool, typing.Optional[list]):
         loader = DataLoaderFromDatabase(QueryType.return_all)
 
