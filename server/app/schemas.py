@@ -19,6 +19,10 @@ class GetSelectedProductsSchema(RequestWithMandatoryUserToken):
     pass
 
 
+class GetNotSelectedProductsSchema(RequestWithMandatoryUserToken):
+    pass
+
+
 class EditProductsSchema(RequestWithMandatoryUserToken):
     old_name: str
     new_name: typing.Optional[str]

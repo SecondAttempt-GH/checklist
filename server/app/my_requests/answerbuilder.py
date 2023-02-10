@@ -2,18 +2,18 @@ import typing
 from enum import Enum
 
 
-class AnswerStatuses(str, Enum):
+class AnswerStatus(str, Enum):
     error = "error"
     success = "success"
 
 
 class AnswerBuilder:
     def __init__(self) -> None:
-        self._status: typing.Optional[AnswerStatuses] = None
+        self._status: typing.Optional[AnswerStatus] = None
         self._comment: typing.Optional[str] = None
         self._values: typing.Dict = {}
 
-    def set_status(self, status: AnswerStatuses):
+    def set_status(self, status: AnswerStatus):
         self._status = status
         return self
 
@@ -34,4 +34,3 @@ class AnswerBuilder:
         if len(self._values.keys()) != 0:
             result["message"]["values"] = self._values
         return result
-

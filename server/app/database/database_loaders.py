@@ -42,11 +42,11 @@ class DataLoaderFromDatabase:
                 return
 
     def __update_one_data(self, result) -> None:
-        self._data = None if result is None else result[0]
+        self._data = None if result is None else result
         self._is_loading = False
 
     def __update_many_data(self, result) -> None:
-        self._data = list() if result is None else [answer[0] for answer in result]
+        self._data = list() if result is None else [answer for answer in result]
         self._is_loading = False
 
 

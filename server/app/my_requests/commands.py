@@ -4,12 +4,14 @@ from app.algorithmforcomparingoffers import AlgorithmForComparingOffers
 from app.core.authorizationutils import generate_token
 from app.database.databasecommands import database_commands
 from app.determinanttextofpricetag import DeterminantTextOfPriceTag
-from app.my_requests.answerbuilder import AnswerBuilder, AnswerStatuses
+from app.my_requests.answerbuilder import AnswerBuilder, AnswerStatus
+from app.my_requests.commands_utils import get_products_answer
 from app.schemas import AddProductSchema
 from app.schemas import DeleteProductSchema
 from app.schemas import EditProductsSchema
 from app.schemas import GetAllProductsSchema
 from app.schemas import GetSelectedProductsSchema
+from app.schemas import GetNotSelectedProductsSchema
 from app.schemas import PhotoUserSchema
 
 app = FastAPI()
@@ -26,14 +28,14 @@ async def check_photo_with_list_of_products(request: PhotoUserSchema = Depends()
     answer = AnswerBuilder()
     condition, products = await database_commands.try_get_all_products_user(request.user_token)
     if not condition:
-        answer.set_status(AnswerStatuses.error).set_comment("Не удалось получить данные из БД")
+        answer.set_status(AnswerStatus.error).set_comment("Не удалось получить данные из БД")
         return answer.get_result()
 
     determinant = DeterminantTextOfPriceTag()
     result_determine = determinant.to_determine(photo_bytes)
 
     if result_determine.found_text is None:
-        answer.set_status(AnswerStatuses.error). \
+        answer.set_status(AnswerStatus.error). \
             set_comment("Не удалось найти текст на изображение"). \
             add_value("image", "None")
         return answer.get_result()
@@ -42,13 +44,13 @@ async def check_photo_with_list_of_products(request: PhotoUserSchema = Depends()
     for product in products:
         coincidence = algorithm.check(product, result_determine.found_text)
         if coincidence:
-            answer.set_status(AnswerStatuses.success). \
+            answer.set_status(AnswerStatus.success). \
                 set_comment(f"Продукт {product} вычеркнут из списка"). \
                 add_value("product", product). \
                 add_value("found_text", result_determine.found_text). \
                 add_value("time_spent", result_determine.time_spent)
             return answer.get_result()
-    answer.set_status(AnswerStatuses.error). \
+    answer.set_status(AnswerStatus.error). \
         set_comment(
         f"Не удалось найти продукт ({result_determine.found_text}) в списках пользователя ({request.user_token})")
     return answer.get_result()
@@ -71,11 +73,11 @@ async def authorization_user():
     is_add_new_user = await database_commands.try_add_user(created_token)
     answer = AnswerBuilder()
     if is_add_new_user:
-        answer.set_status(AnswerStatuses.success). \
+        answer.set_status(AnswerStatus.success). \
             set_comment("Новый пользователь добавлен в БД"). \
             add_value("token", created_token)
         return answer.get_result()
-    return answer.set_status(AnswerStatuses.error).set_comment("Не удалось добавить пользователя в БД").get_result()
+    return answer.set_status(AnswerStatus.error).set_comment("Не удалось добавить пользователя в БД").get_result()
 
 
 @app.post("/get_all_products")
@@ -85,10 +87,8 @@ async def get_all_products(request: GetAllProductsSchema):
     :param request:
     :return:
     """
-    state, products = await database_commands.try_get_all_products_user(request.user_token)
-    if state:
-        return {"status": "success", "message": {"products": products}}
-    return {"status": "error", "message": "Не удалось получить список продуктов"}
+    state, products = await database_commands.try_get_all_products_user(request.user_token, True)
+    return get_products_answer(request.user_token, state, products)
 
 
 @app.post("/get_selected_products")
@@ -98,10 +98,20 @@ async def get_selected_products(request: GetSelectedProductsSchema):
     :param request:
     :return:
     """
-    state, products = await database_commands.try_get_all_selected_products_user(request.user_token)
-    if state:
-        return {"status": "success", "message": {"products": products}}
-    return {"status": "error", "message": "Не удалось получить список выбранных продуктов"}
+
+    state, products = await database_commands.try_get_all_selected_products_user(request.user_token, True)
+    return get_products_answer(request.user_token, state, products)
+
+
+@app.post("/get_all_not_selected_products_user")
+async def get_all_not_selected_products_user(request: GetNotSelectedProductsSchema):
+    """
+        Получение всех не выбранных продуктов пользователя
+    :param request:
+    :return:
+    """
+    state, products = await database_commands.try_get_all_not_selected_products_user(request.user_token, True)
+    return get_products_answer(request.user_token, state, products)
 
 
 @app.post("/edit_product")

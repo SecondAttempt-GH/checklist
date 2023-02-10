@@ -58,27 +58,43 @@ class DatabaseCommands:
         except NotFoundUserIdAndProductId:
             return False
 
-    async def try_get_all_products_user(self, user_token: str) -> (bool, typing.Optional[list]):
+    async def try_get_all_products_user(self, user_token: str, add_ids: bool = False) -> (bool, typing.Optional[list]):
+        """
+            Пытаемся получить все продукты выбранного пользователя
+        :param user_token:
+        :param add_ids:
+        :return:
+        """
         user_id = await self.__get_user_id(user_token)
 
         if user_id is None:
             my_logger.info(f"Пользователя ({user_token}) нет в БД", "DatabaseCommands.TryGetAllProductsUser")
             return False, None
+        return await self.__try_get_data_from_shopping_list(user_id, add_ids)
 
-        loader = DataLoaderFromDatabase(QueryType.return_all)
-        products = await loader.get_data_async(f"""select product from shopping_list where user_id = {user_id};""")
-        return True, products
-
-    async def try_get_all_selected_products_user(self, user_token: str) -> (bool, typing.Optional[list]):
+    async def try_get_all_selected_products_user(self, user_token: str, add_ids: bool = False) -> (bool, typing.Optional[list]):
+        """
+            Пытаемся получить все выбранные продукты выбранного продукта
+        :param user_token:
+        :param add_ids:
+        :return:
+        """
         user_id = await self.__get_user_id(user_token)
 
         if user_id is None:
             my_logger.info(f"Пользователя ({user_token}) нет в БД", "DatabaseCommands.TryGetAllSelectedProductsUser")
             return False, None
 
-        loader = DataLoaderFromDatabase(QueryType.return_all)
-        products = await loader.get_data_async(f"""select product from shopping_list where user_id = {user_id} and is_purchased_product = True;""")
-        return True, products
+        return await self.__try_get_data_from_shopping_list(user_id, add_ids, True)
+
+    async def try_get_all_not_selected_products_user(self, user_token: str, add_ids: bool = False) -> (bool, typing.Optional[list]):
+        user_id = await self.__get_user_id(user_token)
+
+        if user_id is None:
+            my_logger.info(f"Пользователя ({user_token}) нет в БД", "DatabaseCommands.TryGetAllNotSelectedProductsUser")
+            return False, None
+
+        return await self.__try_get_data_from_shopping_list(user_id, add_ids, False)
 
     async def try_select_product(self, user_token: str, product_name: str) -> bool:
         """
@@ -124,16 +140,30 @@ class DatabaseCommands:
         return user_id, product_id
 
     @staticmethod
-    async def __get_product_id(user_id, product_name: str) -> typing.Optional[str]:
-        loader = DataLoaderFromDatabase(QueryType.return_one)
-        data = await loader.get_data_async(f"""select id from shopping_list where user_id = {user_id} and product = "{product_name}";""")
-        return data
+    async def __try_get_data_from_shopping_list(user_id: int, add_ids: bool = False, is_purchased_product: typing.Optional[bool] = None) -> (bool, typing.Optional[list]):
+        loader = DataLoaderFromDatabase(QueryType.return_all)
+
+        current_id = current_is_purchased_value = ""
+        if add_ids:
+            current_id = "id,"
+        if is_purchased_product is not None:
+            current_is_purchased_value = f"and is_purchased_product = {is_purchased_product}"
+
+        command = f"""select {current_id} product from shopping_list where user_id = {user_id} {current_is_purchased_value};"""
+        products = await loader.get_data_async(command)
+        return True, products
 
     @staticmethod
-    async def __get_user_id(user_token: str) -> typing.Optional[str]:
+    async def __get_product_id(user_id, product_name: str) -> typing.Optional[int]:
+        loader = DataLoaderFromDatabase(QueryType.return_one)
+        data = await loader.get_data_async(f"""select id from shopping_list where user_id = {user_id} and product = "{product_name}";""")
+        return data[0]
+
+    @staticmethod
+    async def __get_user_id(user_token: str) -> typing.Optional[int]:
         loader = DataLoaderFromDatabase(QueryType.return_one)
         data = await loader.get_data_async(f"""select id from users where token = "{user_token}";""")
-        return data
+        return data[0]
 
 
 database_commands = DatabaseCommands()

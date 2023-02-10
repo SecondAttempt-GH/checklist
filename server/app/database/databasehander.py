@@ -91,7 +91,7 @@ class DatabaseHandler:
             return
         self.__connect()
         while len(self._queue) != 0:
-            first_query = self._queue[0]
+            first_query = self._queue.pop(0)
             command = first_query.get_command()
             cursor = self._connector.execute(command)
 
@@ -109,7 +109,6 @@ class DatabaseHandler:
                 my_logger.info("Запрос с сохранением результата завершен")
             else:
                 my_logger.warning("Не верный тип запроса")
-            self._queue.remove(first_query)
         self.__disconnect()
 
     def __connect(self) -> None:
