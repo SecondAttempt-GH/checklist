@@ -24,12 +24,12 @@ class GetNotSelectedProductsSchema(RequestWithMandatoryUserToken):
 
 
 class EditProductsSchema(RequestWithMandatoryUserToken):
-    old_name: str
-    new_name: typing.Optional[str]
+    product_id: int
+    product_name: typing.Optional[str]
 
 
 class DeleteProductSchema(RequestWithMandatoryUserToken):
-    product_name: str
+    product_id: int
 
 
 class AddProductSchema(RequestWithMandatoryUserToken):

@@ -123,13 +123,18 @@ async def edit_product(request: EditProductsSchema):
     :return:
     """
     user_token = request.user_token
-    old_name = request.old_name
-    new_name = request.new_name
+    product_id = request.product_id
+    product_name = request.product_name
 
-    state = await database_commands.try_change_name_product(user_token, old_name, new_name)
+    answer = AnswerBuilder()
+    state = await database_commands.try_change_product_name(user_token, product_id, product_name)
     if state:
-        return {"status": "success", "message": {"old_product_name": old_name, "new_product_name": new_name}}
-    return {"status": "error", "message": "Не удалось изменить имя продукта"}
+        answer.set_status(AnswerStatus.success).\
+            set_comment(f"Удалось изменить имя продукта для пользователя ({user_token})").\
+            add_value("product_id", product_id).add_value("new_product_name", product_name)
+        return answer.get_result()
+    answer.set_status(AnswerStatus.error).set_comment(f"Не удалось изменить имя продукта для пользователя ({user_token})")
+    return answer.get_result()
 
 
 @app.post("/delete_product")
@@ -140,12 +145,17 @@ async def delete_product(request: DeleteProductSchema):
     :return:
     """
     user_token = request.user_token
-    product_name = request.product_name
+    product_id = request.product_id
 
-    state = await database_commands.try_delete_product(user_token, product_name)
+    answer = AnswerBuilder()
+    state, product_name = await database_commands.try_delete_product(user_token, product_id)
     if state:
-        return {"status": "success", "message": {"deleted_product": product_name}}
-    return {"status": "error", "message": "Не удалось удалить продукт"}
+        answer.set_status(AnswerStatus.success).\
+            set_comment(f"Удалось удалить продукт для пользователя ({user_token})").\
+            add_value("product_id", product_id).add_value("product_name", product_name)
+        return answer.get_result()
+    answer.set_status(AnswerStatus.error).set_comment(f"Не удалось удалить имя продукта для пользователя ({request.user_token})")
+    return answer.get_result()
 
 
 @app.post("/add_product")
@@ -158,7 +168,12 @@ async def add_product(request: AddProductSchema):
     user_token = request.user_token
     product_name = request.product_name
 
-    state = await database_commands.try_add_product(user_token, product_name)
+    answer = AnswerBuilder()
+    state, product_id = await database_commands.try_add_product(user_token, product_name)
     if state:
-        return {"status": "success", "message": {"added_product": product_name}}
-    return {"status": "error", "message": "Не удалось добавить продукт"}
+        answer.set_status(AnswerStatus.success).\
+            set_comment(f"Удалось добавить продукт для пользователя ({user_token})").\
+            add_value(product_id, product_id).add_value("product_name", product_name)
+        return answer.get_result()
+    answer.set_status(AnswerStatus.error).set_comment(f"Не удалось добавить продукт для пользователя ({request.user_token})")
+    return answer.get_result()

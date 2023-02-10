@@ -9,6 +9,11 @@ class NotFoundUserIdAndProductId(Exception):
 
 class DatabaseCommands:
     async def try_add_user(self, user_token: str) -> bool:
+        """
+            Пытаемся добавить пользователя
+        :param user_token:
+        :return:
+        """
         user_id = await self.__get_user_id(user_token)
 
         if user_id is not None:
@@ -19,44 +24,60 @@ class DatabaseCommands:
         await loader.upload_data_async(f"""insert into users(token) values ("{user_token}"); """)
         return True
 
-    async def try_add_product(self, user_token: str, product_name: str) -> bool:
+    async def try_add_product(self, user_token: str, product_name: str) -> (bool, typing.Optional[list]):
+        """
+            Пытаемся добавить продукт
+        :param user_token:
+        :param product_name:
+        :return:
+        """
         user_id = await self.__get_user_id(user_token)
         product_id = await self.__get_product_id(user_id, product_name)
 
         # Если не нашли пользователя или нашли продукт с таким именим
         if user_id is None or product_id is not None:
             my_logger.info(f"Пользователя ({user_token}) нет в БД или продукт ({product_name}) есть в БД", "DatabaseCommands.TryAddProduct")
-            return False
+            return False, None
 
         loader = DataUploadingToDatabase()
         await loader.upload_data_async(f"""insert into shopping_list(user_id, product) values ({user_id}, "{product_name}"); """)
-        return True
+        product_id = await self.__get_product_id(user_id, product_name)
+        return True, product_id
 
-    async def try_change_name_product(self, user_token: str, old_product_name: str, new_product_name: str) -> bool:
-        try:
-            user_id, product_id = await self.__try_get_user_and_product_ids(user_token, old_product_name)
-
-            loader = DataUploadingToDatabase()
-            await loader.upload_data_async(f"""update shopping_list set product = "{new_product_name}" where user_id = {user_id} and id = {product_id};""")
-            return True
-        except NotFoundUserIdAndProductId:
-            return False
-
-    async def try_delete_product(self, user_token: str, product_name: str) -> bool:
+    async def try_change_product_name(self, user_token: str, product_id: int, product_name: str) -> bool:
         """
-            Пытаемся удалить выбранный продукт из базы данных
+            Пытаемся изменить имя продукта по id продукту
         :param user_token:
+        :param product_id:
         :param product_name:
         :return:
         """
-        try:
-            user_id, product_id = await self.__try_get_user_and_product_ids(user_token, product_name)
-
-            loader = DataUploadingToDatabase()
-            await loader.upload_data_async(f"""delete from shopping_list where user_id = {user_id} and id = {product_id};""")
-            return True
-        except NotFoundUserIdAndProductId:
+        user_id = await self.__get_user_id(user_token)
+        if user_id is None:
+            my_logger.info(f"Пользователь ({user_token}) нет в БД", "DatabaseCommands.TryChangeProductName")
             return False
+
+        loader = DataUploadingToDatabase()
+        await loader.upload_data_async(f"""update shopping_list set product = "{product_name}" where user_id = {user_id} and id = {product_id};""")
+        return True
+
+    async def try_delete_product(self, user_token: str, product_id: int) -> (bool, typing.Optional[list]):
+        """
+            Пытаемся удалить выбранный продукт из базы данных
+        :param product_id:
+        :param user_token:
+        :return:
+        """
+        user_id = await self.__get_user_id(user_token)
+        product_name_from_db = await self.__get_product_name(user_id, product_id)
+
+        if user_id is None or product_name_from_db is None:
+            my_logger.info(f"Пользователь ({user_token}) нет в БД", "DatabaseCommands.TryChangeProductName")
+            return False, None
+
+        loader = DataUploadingToDatabase()
+        await loader.upload_data_async(f"""delete from shopping_list where user_id = {user_id} and id = {product_id};""")
+        return True, product_name_from_db
 
     async def try_get_all_products_user(self, user_token: str, add_ids: bool = False) -> (bool, typing.Optional[list]):
         """
@@ -154,16 +175,22 @@ class DatabaseCommands:
         return True, products
 
     @staticmethod
-    async def __get_product_id(user_id, product_name: str) -> typing.Optional[int]:
+    async def __get_product_id(user_id: int, product_name: str) -> typing.Optional[int]:
         loader = DataLoaderFromDatabase(QueryType.return_one)
         data = await loader.get_data_async(f"""select id from shopping_list where user_id = {user_id} and product = "{product_name}";""")
-        return data[0]
+        return None if data is None else data[0]
+
+    @staticmethod
+    async def __get_product_name(user_id: int, product_id: int) -> typing.Optional[str]:
+        loader = DataLoaderFromDatabase(QueryType.return_one)
+        data = await loader.get_data_async(f"""select id from shopping_list where user_id = {user_id} and id = {product_id};""")
+        return None if data is None else data[0]
 
     @staticmethod
     async def __get_user_id(user_token: str) -> typing.Optional[int]:
         loader = DataLoaderFromDatabase(QueryType.return_one)
         data = await loader.get_data_async(f"""select id from users where token = "{user_token}";""")
-        return data[0]
+        return None if data is None else data[0]
 
 
 database_commands = DatabaseCommands()
