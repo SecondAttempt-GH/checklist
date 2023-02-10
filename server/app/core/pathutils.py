@@ -15,11 +15,11 @@ def get_env_path():
 def get_image_from_static(name_image: str) -> str:
     if not name_image.endswith(".png") and not name_image.endswith(".jpg"):
         raise Exception()
-    return os.path.join(get_project_root(), f"static/{name_image}")
+    return os.path.join(get_static_root(), f"{name_image}")
 
 
 def get_database_root() -> str:
-    return os.path.join(get_project_root(), "data/checklist_database.db")
+    return os.path.join(get_static_root(), "checklist_database.db")
 
 
 def get_config_root() -> str:
@@ -27,7 +27,7 @@ def get_config_root() -> str:
 
 
 def get_logger_path() -> str:
-    return os.path.join(get_project_root(), "static/logger.txt")
+    return os.path.join(get_static_root(), "logger.txt")
 
 
 def get_names_path() -> str:
@@ -40,6 +40,13 @@ def get_weights_path() -> str:
 
 def get_cfg_path() -> str:
     return os.path.join(get_project_root(), "data/checklist-tiny.cfg")
+
+
+def get_static_root() -> str:
+    path = os.path.join(get_project_root(), "static")
+    if not os.path.exists(path):
+        os.makedirs(path)
+    return path
 
 
 def load_env():
