@@ -26,11 +26,14 @@ class GetNotSelectedProductsSchema(RequestWithMandatoryUserToken):
 class EditProductsSchema(RequestWithMandatoryUserToken):
     product_id: int
     product_name: typing.Optional[str]
+    product_quantity: typing.Optional[int]
 
 
 class DeleteProductSchema(RequestWithMandatoryUserToken):
     product_id: int
+    product_quantity: int = 1
 
 
 class AddProductSchema(RequestWithMandatoryUserToken):
     product_name: str
+    product_quantity: int = 1
