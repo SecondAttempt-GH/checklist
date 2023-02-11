@@ -16,13 +16,16 @@ import androidx.core.content.FileProvider
 import com.example.proverka.Adapters.FoodUnRedactableAdapter
 import com.example.proverka.databinding.ActivityMainBinding
 import com.example.proverka.databinding.PrintFoodBinding
+import com.example.proverka.model.AuthResp.AuthoResponseBody
 import com.example.proverka.model.FoodItem
 import com.example.proverka.model.FoodList
 import okhttp3.logging.HttpLoggingInterceptor
 import com.google.gson.Gson
 import okhttp3.*
 import okhttp3.MediaType.Companion.toMediaType
+import okhttp3.MediaType.Companion.toMediaTypeOrNull
 import okhttp3.RequestBody.Companion.toRequestBody
+import java.io.ByteArrayOutputStream
 import java.io.File
 import java.io.FileInputStream
 import java.io.FileNotFoundException
@@ -41,7 +44,7 @@ class MainActivity : AppCompatActivity() {
     private lateinit var token: String
     private lateinit var unredadapter: FoodUnRedactableAdapter
     val contentType = "application/json".toMediaType()
-    val serverUrl = ServerUrl("http://127.0.0.1:8000")
+    val serverUrl = ServerUrl("https://5d59-176-77-61-151.eu.ngrok.io")
 
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -65,30 +68,20 @@ class MainActivity : AppCompatActivity() {
     private fun setupToken(){
         val sPref = getPreferences(MODE_PRIVATE)
         val editor = sPref.edit()
-//        val newToken = "вова"
-//        editor.putString(SAVED_TOKEN, newToken)
-//        editor.commit()
-        editor.remove(SAVED_TOKEN)
         var savedToken = sPref.getString(SAVED_TOKEN, "")
+        token = savedToken.toString()
+        println(token)
+        Toast.makeText(this, savedToken, Toast.LENGTH_SHORT).show();
         if (savedToken == "") {
             val gson = Gson()
             val client = OkHttpClient.Builder()
                 .build()
-            println(serverUrl.baseUrl)
             val request = Request.Builder()
                 .post(gson.toJson(null).toRequestBody(contentType))// если здесь сделать get запрос
                 .url(serverUrl.authorization_user)// а здесь поставить адрес ютуба то метод call.enqueue снизу работает
                 .build()
 
             val call = client.newCall(request)
-
-            // я крч изначально получал ошибки от протоколов защиты соединения
-            // в интернете говорят что это фиксится добавление м манифес строчки (android:usesCleartextTraffic="true") если интересно она там сейчас есть
-            // После них ошибка секюрити ушла появились те что ты видишь на данный момет
-            // Появляются они только при обращении на наш сервак
-            // Из этого я делаю предположение ключ к решению проблемы лежит из этого фаркта
-            // Чё делать не знаю. знаю что проблема точно на уровне приложухи а не сервера, так как онлайн тестеры который отправляют запросы к серверу также отправляют их от имени 127.0.0.1 но под другими доменами. у них все работает
-            // Удачи
 
 
 
@@ -100,7 +93,10 @@ class MainActivity : AppCompatActivity() {
                 override fun onResponse(call: Call, response: Response) {
                     if (response.isSuccessful) {
                         val responseBodyString = response.body!!.string()
-                        println(responseBodyString)
+                        val jsonResp = gson.fromJson(responseBodyString, AuthoResponseBody::class.java)
+                        editor.putString(SAVED_TOKEN, jsonResp.message.values.token)
+                        token = jsonResp.message.values.token
+                        editor.commit()
 
 
                     } else {
@@ -112,7 +108,7 @@ class MainActivity : AppCompatActivity() {
             })
 
         }
-        Toast.makeText(this, savedToken, Toast.LENGTH_SHORT).show();
+
 
     }
 
@@ -127,7 +123,6 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun onAddPressed() {
-        println(token)
         val dialogBinding: PrintFoodBinding = PrintFoodBinding.inflate(layoutInflater)
         val dialog: AlertDialog = AlertDialog.Builder(this)
             .setTitle("Create")
@@ -164,17 +159,38 @@ class MainActivity : AppCompatActivity() {
 //////////////Пример работы с Http запросами/////////////////////
 
 
+            val stream = ByteArrayOutputStream()
+            imageBitmap.compress(Bitmap.CompressFormat.JPEG, 100, stream)
+            val byteArray = stream.toByteArray()
+
+
+
             val loggingInterceptor = HttpLoggingInterceptor()
                 .setLevel(HttpLoggingInterceptor.Level.BODY)
             val gson = Gson()
             val client = OkHttpClient.Builder()
+                .addInterceptor(loggingInterceptor)
                 .build()
 
-            val requestBodyString = gson.toJson(savedJPGImage.readBytes())
-            val okHttpRequestBody = requestBodyString.toRequestBody(contentType)
+//            val requestBodyString = gson.toJson(savedJPGImage.readBytes())
+
+
+//            val okHttpRequestBody = requestBodyString.toRequestBody("multipart/form-data".toMediaTypeOrNull())
+            val okHttpRequestBody = byteArray.toRequestBody("multipart/form-data".toMediaType(),0, byteArray.size)
+            val body = MultipartBody.Part.createFormData("photo[content]", "photo", byteArray.toRequestBody("image/*".toMediaTypeOrNull(),0, byteArray.size))
+            println(byteArray.toRequestBody("image/*".toMediaTypeOrNull(),0, byteArray.size).contentType())
+            val body2 = MultipartBody.Builder()
+                .setType("multipart/form-data".toMediaType())
+                .addFormDataPart("user_token", token)
+                .addFormDataPart("file", "photo_bytes", byteArray.toRequestBody("bytes".toMediaTypeOrNull(),0, byteArray.size))
+                .build()
+
+
             val request = Request.Builder()
-                .post(okHttpRequestBody)
-                .url(serverUrl.chek_photo_whith_list_of_products)
+                .post(body2)
+                .addHeader("accept", "application/json")
+                .url(serverUrl.check_photo_with_list_of_products + "?user_token=" + token)
+//                .url("https://webhook.site/85b64cb6-4a29-4ce3-9d67-647e7b2cec77" + "?user_token=" + token)
                 .build()
             val call = client.newCall(request)
             var grespons : Response
@@ -187,7 +203,7 @@ class MainActivity : AppCompatActivity() {
                 override fun onResponse(call: Call, response: Response) {
                     if (response.isSuccessful) {
                         val responseBodyString = response.body!!.toString()
-                        println(responseBodyString)
+                        println(gson.fromJson(responseBodyString, String::class.java))
                     }
 
                 }
