@@ -11,20 +11,17 @@ import android.os.Bundle
 import android.os.Environment
 import android.provider.MediaStore
 import android.widget.TextView
+import android.widget.Toast
 import androidx.core.content.FileProvider
-import com.android.volley.Response
-import com.android.volley.toolbox.StringRequest
-import com.android.volley.toolbox.Volley
 import com.example.proverka.Adapters.FoodUnRedactableAdapter
 import com.example.proverka.databinding.ActivityMainBinding
 import com.example.proverka.databinding.PrintFoodBinding
 import com.example.proverka.model.FoodItem
 import com.example.proverka.model.FoodList
-import okhttp3.OkHttpClient
 import okhttp3.logging.HttpLoggingInterceptor
 import com.google.gson.Gson
+import okhttp3.*
 import okhttp3.MediaType.Companion.toMediaType
-import okhttp3.Request
 import okhttp3.RequestBody.Companion.toRequestBody
 import java.io.File
 import java.io.FileInputStream
@@ -33,16 +30,18 @@ import java.io.FileOutputStream
 import java.io.IOException
 import java.io.OutputStream
 import java.lang.ref.WeakReference
-
+import java.net.HttpURLConnection
+import java.net.URL
 
 
 class MainActivity : AppCompatActivity() {
 
     private lateinit var binding: ActivityMainBinding
     private lateinit var data: FoodList
+    private lateinit var token: String
     private lateinit var unredadapter: FoodUnRedactableAdapter
-    val contentType = "application/json; charset=utf-8".toMediaType()
-    val serverUrl = "https://webhook.site/85b64cb6-4a29-4ce3-9d67-647e7b2cec77"
+    val contentType = "application/json".toMediaType()
+    val serverUrl = ServerUrl("http://127.0.0.1:8000")
 
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -55,10 +54,65 @@ class MainActivity : AppCompatActivity() {
             savedInstanceState.getParcelableArrayList<FoodItem>(FOOD_LIST)?.let { data.setFood(it) }
         }
 
+        setupToken()
         setupList()
         binding.addButton.setOnClickListener {onAddPressed()}
         binding.fotobutton.setOnClickListener {onFotoPressed()}//кнопка с камерой
         binding.editbutton.setOnClickListener {onEditPressed()}
+
+    }
+
+    private fun setupToken(){
+        val sPref = getPreferences(MODE_PRIVATE)
+        val editor = sPref.edit()
+//        val newToken = "вова"
+//        editor.putString(SAVED_TOKEN, newToken)
+//        editor.commit()
+        editor.remove(SAVED_TOKEN)
+        var savedToken = sPref.getString(SAVED_TOKEN, "")
+        if (savedToken == "") {
+            val gson = Gson()
+            val client = OkHttpClient.Builder()
+                .build()
+            println(serverUrl.baseUrl)
+            val request = Request.Builder()
+                .post(gson.toJson(null).toRequestBody(contentType))// если здесь сделать get запрос
+                .url(serverUrl.authorization_user)// а здесь поставить адрес ютуба то метод call.enqueue снизу работает
+                .build()
+
+            val call = client.newCall(request)
+
+            // я крч изначально получал ошибки от протоколов защиты соединения
+            // в интернете говорят что это фиксится добавление м манифес строчки (android:usesCleartextTraffic="true") если интересно она там сейчас есть
+            // После них ошибка секюрити ушла появились те что ты видишь на данный момет
+            // Появляются они только при обращении на наш сервак
+            // Из этого я делаю предположение ключ к решению проблемы лежит из этого фаркта
+            // Чё делать не знаю. знаю что проблема точно на уровне приложухи а не сервера, так как онлайн тестеры который отправляют запросы к серверу также отправляют их от имени 127.0.0.1 но под другими доменами. у них все работает
+            // Удачи
+
+
+
+            call.enqueue(object : Callback {//здесь погибли мои надежды
+                override fun onFailure(call: Call, e: IOException) {
+                    e.printStackTrace()
+                }
+
+                override fun onResponse(call: Call, response: Response) {
+                    if (response.isSuccessful) {
+                        val responseBodyString = response.body!!.string()
+                        println(responseBodyString)
+
+
+                    } else {
+                        throw IllegalStateException("Oops")
+                    }
+
+
+                }
+            })
+
+        }
+        Toast.makeText(this, savedToken, Toast.LENGTH_SHORT).show();
 
     }
 
@@ -73,6 +127,7 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun onAddPressed() {
+        println(token)
         val dialogBinding: PrintFoodBinding = PrintFoodBinding.inflate(layoutInflater)
         val dialog: AlertDialog = AlertDialog.Builder(this)
             .setTitle("Create")
@@ -106,33 +161,38 @@ class MainActivity : AppCompatActivity() {
 
             val savedJPGImage = saveImage(imageBitmap, this) as File
 
-//////////////Попытака работы с Http запросами в синхронном формате (неудачная. В андроид приложениях работа с http запросами выводится в отдельный поток(ассинхронно с использованием короутинов))/////////////////////
+//////////////Пример работы с Http запросами/////////////////////
 
 
             val loggingInterceptor = HttpLoggingInterceptor()
                 .setLevel(HttpLoggingInterceptor.Level.BODY)
             val gson = Gson()
-
-
             val client = OkHttpClient.Builder()
                 .build()
 
             val requestBodyString = gson.toJson(savedJPGImage.readBytes())
-
-            println(requestBodyString)
             val okHttpRequestBody = requestBodyString.toRequestBody(contentType)
             val request = Request.Builder()
                 .post(okHttpRequestBody)
-                .url(serverUrl)
+                .url(serverUrl.chek_photo_whith_list_of_products)
                 .build()
             val call = client.newCall(request)
+            var grespons : Response
+//////// крч если я не успею дописать логику за ночь то запросы прописываются следующим образом/////////////
+            call.enqueue(object : Callback {
+                override fun onFailure(call: Call, e: IOException) {
+                    e.printStackTrace()
+                }
 
-            val response = call.execute()
+                override fun onResponse(call: Call, response: Response) {
+                    if (response.isSuccessful) {
+                        val responseBodyString = response.body!!.toString()
+                        println(responseBodyString)
+                    }
 
-            if (response.isSuccessful) {
-                println("+")
-            }
-
+                }
+            })
+//////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 
         }
@@ -176,6 +236,7 @@ class MainActivity : AppCompatActivity() {
 
     /////////это вообще забей хуй (Коды ответов кри навигации между активити, чтобы не хардкодить вынес их сюда)///////////////
     companion object{
+        @JvmStatic val SAVED_TOKEN = "saved_token"
         @JvmStatic val FOOD_LIST = "FOOD_LIST"
         @JvmStatic val FOOD_TITLE = "FOOD_TITLE"
         @JvmStatic val EDIT_REQUES_CODE = 1
