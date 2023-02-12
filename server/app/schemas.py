@@ -37,3 +37,7 @@ class DeleteProductSchema(RequestWithMandatoryUserToken):
 class AddProductSchema(RequestWithMandatoryUserToken):
     product_name: str
     product_quantity: int = 1
+
+
+class DeleteAllSchema(RequestWithMandatoryUserToken):
+    pass

@@ -116,6 +116,22 @@ class DatabaseCommands:
             await loader.upload_data_async(f"""delete from shopping_list where user_id = {user_id} and id = {product_id};""")
         return True, product_name_from_db
 
+    async def try_delete_all_products(self, user_token: str) -> bool:
+        """
+            Пытаемся удалить все продукты пользователя
+        :param user_token:
+        :return:
+        """
+        user_id = await self.__get_user_id(user_token)
+
+        if user_id is None:
+            my_logger.info(f"Пользователь ({user_token}) нет в БД", "DatabaseCommands.TryDeleteProduct")
+            return False
+
+        loader = DataUploadingToDatabase()
+        await loader.upload_data_async(f"""delete from shopping_list where user_id = {user_id};""")
+        return True
+
     async def try_get_all_products_user(self, user_token: str, add_ids: bool = False) -> (bool, typing.Optional[list]):
         """
             Пытаемся получить все продукты выбранного пользователя

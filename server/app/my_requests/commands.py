@@ -6,7 +6,7 @@ from app.database.databasecommands import database_commands
 from app.determinanttextofpricetag import DeterminantTextOfPriceTag
 from app.my_requests.answerbuilder import AnswerBuilder, AnswerStatus
 from app.my_requests.commands_utils import get_products_answer
-from app.schemas import AddProductSchema
+from app.schemas import AddProductSchema, DeleteAllSchema
 from app.schemas import DeleteProductSchema
 from app.schemas import EditProductsSchema
 from app.schemas import GetAllProductsSchema
@@ -196,4 +196,23 @@ async def add_product(request: AddProductSchema):
             add_value("product_id", product_id).add_value("product_name", product_name)
         return answer.get_result()
     answer.set_status(AnswerStatus.error).set_comment(f"Не удалось добавить продукт для пользователя ({request.user_token})")
+    return answer.get_result()
+
+
+@app.post("/delete_all_products")
+async def delete_all(request: DeleteAllSchema):
+    """
+        Удаление всех продуктов пользователя
+    :param request:
+    :return:
+    """
+    user_token = request.user_token
+
+    answer = AnswerBuilder()
+    state = await database_commands.try_delete_all_products(user_token)
+    if state:
+        answer.set_status(AnswerStatus.success).\
+            set_comment(f"Удалось удалить все продукты пользователя ({user_token})")
+        return answer.get_result()
+    answer.set_status(AnswerStatus.error).set_comment(f"Не удалось удалить все продукты пользователя ({user_token})")
     return answer.get_result()
