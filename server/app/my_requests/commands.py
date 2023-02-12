@@ -222,7 +222,7 @@ async def delete_all(request: DeleteAllSchema):
 async def check_photo(file_bytes: bytes = File(...)) -> None:
     """
         Функционал добавлен для тестирования загрузки фото на сервер
-    :param file:
+    :param file_bytes:
     :return:
     """
     path_image = get_image_from_static("TestImage.jpg")
