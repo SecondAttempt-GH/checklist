@@ -1,5 +1,6 @@
-from fastapi import File, FastAPI, Depends, UploadFile, Form
+from fastapi import File, FastAPI, UploadFile, Form
 
+from app.core.pathutils import get_image_from_static
 from app.algorithmforcomparingoffers import AlgorithmForComparingOffers
 from app.core.authorizationutils import generate_token
 from app.database.databasecommands import database_commands
@@ -12,7 +13,6 @@ from app.schemas import EditProductsSchema
 from app.schemas import GetAllProductsSchema
 from app.schemas import GetSelectedProductsSchema
 from app.schemas import GetNotSelectedProductsSchema
-from app.schemas import PhotoUserSchema
 
 app = FastAPI()
 
@@ -216,3 +216,18 @@ async def delete_all(request: DeleteAllSchema):
         return answer.get_result()
     answer.set_status(AnswerStatus.error).set_comment(f"Не удалось удалить все продукты пользователя ({user_token})")
     return answer.get_result()
+
+
+@app.post("/check_photo")
+async def check_photo(file_bytes: bytes = File(...)) -> None:
+    """
+        Функционал добавлен для тестирования загрузки фото на сервер
+    :param file:
+    :return:
+    """
+    path_image = get_image_from_static("TestImage.jpg")
+    with open(path_image, 'wb') as wf:
+        wf.write(file_bytes)
+
+    answer = AnswerBuilder()
+    return answer.set_status(AnswerStatus.success).set_comment("Фотка загружена на сервер").get_result()
