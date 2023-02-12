@@ -31,5 +31,5 @@ watchfiles==0.18.1
 websockets==10.4
 zipp==3.12.1
 numpy~=1.21.6
-opencv-python~=4.7.0.68
+opencv-python==4.5.5.64
 easyocr~=1.6.2
