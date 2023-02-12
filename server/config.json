@@ -6,7 +6,8 @@
   },
   "ml": {
     "conf_threshold": 0.1,
-    "nms_threshold": 0.4
+    "nms_threshold": 0.4,
+    "languages": ["ru"]
   },
   "pca": {
     "min_len_words": 3,

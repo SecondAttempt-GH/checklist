@@ -71,13 +71,13 @@ class DeterminantTextOfPriceTag:
         if title_image is None:
             return data
 
-        reader = easyocr.Reader(["ru", "en"], gpu=True)
+        reader = easyocr.Reader(self._config.ml.languages, gpu=True)
         bounds = reader.readtext(title_image)
         time_end = time.time()
 
         found_text = ' '.join([bound[1] for bound in bounds])
         data.set_found_text(found_text)
-        data.set_time_spent(time_end - time_start)
+        data.set_time_spent(round(time_end - time_start, 3))
         return data
 
     def __get_names_class(self) -> list:

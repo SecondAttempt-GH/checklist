@@ -35,10 +35,13 @@ async def check_photo_with_list_of_products(user_token: str = Form(...), file: U
     photo_bytes = await file.read()
     result_determine = determinant.to_determine(photo_bytes)
 
+    # Дефолтные значения равны "", 0 так как нужно поддержать сервер
     if result_determine.found_text is None:
         answer.set_status(AnswerStatus.error). \
             set_comment("Не удалось найти текст на изображение"). \
-            add_value("image", "None")
+            add_value("product", ""). \
+            add_value("found_text", ""). \
+            add_value("time_spent", 0)
         return answer.get_result()
 
     algorithm = AlgorithmForComparingOffers()
@@ -52,8 +55,10 @@ async def check_photo_with_list_of_products(user_token: str = Form(...), file: U
                 add_value("time_spent", result_determine.time_spent)
             return answer.get_result()
     answer.set_status(AnswerStatus.error). \
-        set_comment(
-        f"Не удалось найти продукт ({result_determine.found_text}) в списках пользователя ({user_token})")
+        set_comment(f"Не удалось найти продукт ({result_determine.found_text}) в списках пользователя ({user_token})").\
+        add_value("product", ""). \
+        add_value("found_text", ""). \
+        add_value("time_spent", 0)
     return answer.get_result()
 
 
@@ -147,7 +152,7 @@ async def edit_product(request: EditProductsSchema):
         if state_change_product_name:
             answer.add_value("product_id", product_id).add_value("new_product_name", product_name)
 
-        if state_change_product_name:
+        if state_change_product_quantity:
             answer.add_value("product_id", product_id).add_value("new_product_quantity", product_quantity)
 
         return answer.get_result()
@@ -164,10 +169,9 @@ async def delete_product(request: DeleteProductSchema):
     """
     user_token = request.user_token
     product_id = request.product_id
-    product_quantity = request.product_id
 
     answer = AnswerBuilder()
-    state, product_name = await database_commands.try_delete_product(user_token, product_id, product_quantity)
+    state, product_name = await database_commands.try_delete_product(user_token, product_id)
     if state:
         answer.set_status(AnswerStatus.success).\
             set_comment(f"Удалось удалить продукт для пользователя ({user_token})").\

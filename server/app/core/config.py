@@ -1,7 +1,7 @@
 import json
 import typing
 
-from pydantic import BaseModel
+from pydantic import BaseModel, validator
 
 from app.core.pathutils import get_config_root
 
@@ -15,6 +15,13 @@ class Code(BaseModel):
 class ML(BaseModel):
     conf_threshold: float
     nms_threshold: float
+    languages: typing.List[str]
+
+    @validator("languages")
+    def check_languages(cls, value) -> typing.List[str]:
+        if value is None or len(value) == 0:
+            return ["ru"]
+        return value
 
 
 class PCA(BaseModel):

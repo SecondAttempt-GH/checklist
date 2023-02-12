@@ -31,7 +31,6 @@ class EditProductsSchema(RequestWithMandatoryUserToken):
 
 class DeleteProductSchema(RequestWithMandatoryUserToken):
     product_id: int
-    product_quantity: int = 1
 
 
 class AddProductSchema(RequestWithMandatoryUserToken):

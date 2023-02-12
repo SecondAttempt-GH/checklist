@@ -47,7 +47,7 @@ class DatabaseCommands:
             if quantity is not None:
                 await loader.upload_data_async(f"""update shopping_list set product_quantity = {quantity[0] + product_quantity} where user_id = {user_id} and id = {product_id};""")
         else:
-            await loader.upload_data_async(f"""insert into shopping_list(user_id, product) values ({user_id}, "{product_name}"); """)
+            await loader.upload_data_async(f"""insert into shopping_list(user_id, product, product_quantity) values ({user_id}, "{product_name}", {product_quantity}); """)
             product_id = await self.__get_product_id(user_id, product_name)
         return True, product_id
 
@@ -85,7 +85,7 @@ class DatabaseCommands:
         await loader.upload_data_async(f"""update shopping_list set product_quantity = {product_quantity} where user_id = {user_id} and id = {product_id};""")
         return True
 
-    async def try_delete_product(self, user_token: str, product_id: int, product_quantity: int) -> (bool, typing.Optional[list]):
+    async def try_delete_product(self, user_token: str, product_id: int) -> (bool, typing.Optional[list]):
         """
             Пытаемся удалить выбранный продукт из базы данных
         :param product_quantity:
@@ -104,16 +104,8 @@ class DatabaseCommands:
             my_logger.info(f"Продукта ({product_id}) нет в БД", "DatabaseCommands.TryDeleteProduct")
             return False, None
 
-        loader_quantity = DataLoaderFromDatabase(QueryType.return_one)
-        quantity = await loader_quantity.get_data_async(f"""select product_quantity from shopping_list where user_id = {user_id} and id = {product_id};""")
-
         loader = DataUploadingToDatabase()
-        # Если у нас больше одного продукта
-        if quantity is not None and quantity[0] - product_quantity > 0:
-            quantity = quantity[0]
-            await loader.upload_data_async(f"""update shopping_list set product_quantity = {quantity - product_quantity} where user_id = {user_id} and id = {product_id};""")
-        else:
-            await loader.upload_data_async(f"""delete from shopping_list where user_id = {user_id} and id = {product_id};""")
+        await loader.upload_data_async(f"""delete from shopping_list where user_id = {user_id} and id = {product_id};""")
         return True, product_name_from_db
 
     async def try_delete_all_products(self, user_token: str) -> bool:
@@ -231,7 +223,7 @@ class DatabaseCommands:
         if is_purchased_product is not None:
             current_is_purchased_value = f"and is_purchased_product = {is_purchased_product}"
 
-        command = f"""select {current_id} product from shopping_list where user_id = {user_id} {current_is_purchased_value};"""
+        command = f"""select {current_id} product, product_quantity from shopping_list where user_id = {user_id} {current_is_purchased_value};"""
         products = await loader.get_data_async(command)
         return True, products
 
