@@ -53,7 +53,7 @@ async def check_photo_with_list_of_products(user_token: str = Form(...), file: U
             return answer.get_result()
     answer.set_status(AnswerStatus.error). \
         set_comment(
-        f"Не удалось найти продукт ({result_determine.found_text}) в списках пользователя ({request.user_token})")
+        f"Не удалось найти продукт ({result_determine.found_text}) в списках пользователя ({user_token})")
     return answer.get_result()
 
 
