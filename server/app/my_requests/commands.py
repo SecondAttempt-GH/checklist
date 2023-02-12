@@ -1,4 +1,4 @@
-from fastapi import File, FastAPI, Depends
+from fastapi import File, FastAPI, Depends, UploadFile, Form
 
 from app.algorithmforcomparingoffers import AlgorithmForComparingOffers
 from app.core.authorizationutils import generate_token
@@ -18,20 +18,21 @@ app = FastAPI()
 
 
 @app.post("/check_photo_with_list_of_products")
-async def check_photo_with_list_of_products(request: PhotoUserSchema = Depends(), photo_bytes: bytes = File(...)):
+async def check_photo_with_list_of_products(user_token: str = Form(...), file: UploadFile = File(...)):
     """
         Получает фотку и проверяет есть ли продукт в списке с таким же именим
-    :param request:
+    :param user_token:
     :param photo_bytes:
     :return:
     """
     answer = AnswerBuilder()
-    condition, products = await database_commands.try_get_all_products_user(request.user_token)
+    condition, products = await database_commands.try_get_all_products_user(user_token)
     if not condition:
         answer.set_status(AnswerStatus.error).set_comment("Не удалось получить данные из БД")
         return answer.get_result()
 
     determinant = DeterminantTextOfPriceTag()
+    photo_bytes = await file.read()
     result_determine = determinant.to_determine(photo_bytes)
 
     if result_determine.found_text is None:
@@ -41,7 +42,7 @@ async def check_photo_with_list_of_products(request: PhotoUserSchema = Depends()
         return answer.get_result()
 
     algorithm = AlgorithmForComparingOffers()
-    for product in products:
+    for product in [p[0] for p in products]:
         coincidence = algorithm.check(product, result_determine.found_text)
         if coincidence:
             answer.set_status(AnswerStatus.success). \
