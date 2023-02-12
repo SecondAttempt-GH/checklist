@@ -57,6 +57,12 @@ class FoodList {
         foods.remove(foodItem)
     }
 
+    fun remove(name: String){
+        val indexToInc: Int = foods.indexOfFirst { it.name == name }
+        if (indexToInc == -1) return
+        foods.remove(foods[indexToInc])
+    }
+
     fun incFood(name: String){
         val indexToInc: Int = foods.indexOfFirst { it.name == name }
         if (indexToInc == -1) return

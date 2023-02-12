@@ -1,24 +1,22 @@
 package com.example.proverka
 
-import android.app.Activity
 import android.app.AlertDialog
 import android.content.Context
 import android.content.Intent
 import android.graphics.Bitmap
-import android.net.Uri
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
-import android.os.Environment
 import android.provider.MediaStore
-import android.widget.TextView
+import android.view.Menu
+import android.view.MenuItem
 import android.widget.Toast
-import androidx.core.content.FileProvider
 import com.example.proverka.Adapters.FoodUnRedactableAdapter
 import com.example.proverka.databinding.ActivityMainBinding
 import com.example.proverka.databinding.PrintFoodBinding
-import com.example.proverka.model.AuthResp.AuthoResponseBody
+import com.example.proverka.model.AuthResp.*
 import com.example.proverka.model.FoodItem
 import com.example.proverka.model.FoodList
+import com.example.proverka.model.FotoRequest
 import okhttp3.logging.HttpLoggingInterceptor
 import com.google.gson.Gson
 import okhttp3.*
@@ -27,14 +25,9 @@ import okhttp3.MediaType.Companion.toMediaTypeOrNull
 import okhttp3.RequestBody.Companion.toRequestBody
 import java.io.ByteArrayOutputStream
 import java.io.File
-import java.io.FileInputStream
 import java.io.FileNotFoundException
 import java.io.FileOutputStream
 import java.io.IOException
-import java.io.OutputStream
-import java.lang.ref.WeakReference
-import java.net.HttpURLConnection
-import java.net.URL
 
 
 class MainActivity : AppCompatActivity() {
@@ -44,13 +37,16 @@ class MainActivity : AppCompatActivity() {
     private lateinit var token: String
     private lateinit var unredadapter: FoodUnRedactableAdapter
     val contentType = "application/json".toMediaType()
-    val serverUrl = ServerUrl("https://5d59-176-77-61-151.eu.ngrok.io")
+    val serverUrl = ServerUrl("https://f539-176-77-61-151.eu.ngrok.io")
 
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         binding = ActivityMainBinding.inflate(layoutInflater)
         setContentView(binding.root)
+
+
+
         if (savedInstanceState ==null || !savedInstanceState.containsKey(FOOD_LIST)){
             data = FoodList()
         } else {
@@ -58,10 +54,67 @@ class MainActivity : AppCompatActivity() {
         }
 
         setupToken()
+        setipDataFromServer()
         setupList()
+        supportActionBar?.title = "Admin"
         binding.addButton.setOnClickListener {onAddPressed()}
         binding.fotobutton.setOnClickListener {onFotoPressed()}//кнопка с камерой
         binding.editbutton.setOnClickListener {onEditPressed()}
+
+    }
+
+    override fun onCreateOptionsMenu(menu: Menu?): Boolean {
+        menuInflater.inflate(R.menu.my_menu, menu)
+        return true
+    }
+
+    override fun onOptionsItemSelected(item: MenuItem): Boolean {
+        if (item.itemId == R.id.apdateB) appdateList()
+        return true
+    }
+
+
+
+    private fun setipDataFromServer(){
+        val loggingInterceptor = HttpLoggingInterceptor()
+            .setLevel(HttpLoggingInterceptor.Level.BODY)
+        val gson = Gson()
+        val client = OkHttpClient.Builder()
+            .addInterceptor(loggingInterceptor)
+            .build()
+        val request = Request.Builder()
+            .post(gson.toJson(UserTokenJson(token)).toRequestBody(contentType))
+            .url(serverUrl.get_all_products)
+            .build()
+
+        val call = client.newCall(request)
+        data = FoodList()
+
+        call.enqueue(object : Callback {//здесь погибли мои надежды
+        override fun onFailure(call: Call, e: IOException) {
+            e.printStackTrace()
+        }
+            override fun onResponse(call: Call, response: Response) {
+                if (response.isSuccessful) {
+                    val responseBodyString = response.body!!.string()
+                    val jsonResp = gson.fromJson(responseBodyString, GetAllResp::class.java)
+                    if (jsonResp.status == "success") {
+                        val arr = jsonResp.message.values?.product_list
+                        println(arr?.size.toString() + " array size")
+                        if (arr != null) {
+                            for (itr in arr) {
+                                data.add(itr.product_name)
+                            }
+                        }
+                    }
+
+                } else {
+                    throw IllegalStateException("Oops")
+                }
+
+
+            }
+        })
 
     }
 
@@ -82,8 +135,6 @@ class MainActivity : AppCompatActivity() {
                 .build()
 
             val call = client.newCall(request)
-
-
 
             call.enqueue(object : Callback {//здесь погибли мои надежды
                 override fun onFailure(call: Call, e: IOException) {
@@ -122,6 +173,45 @@ class MainActivity : AppCompatActivity() {
         startActivityForResult(intent, 100)// отлов приходящего результата происходит в методе onActivityResult по коду 100
     }
 
+    private fun addElemenToServer(name:String, num: Long){
+        val loggingInterceptor = HttpLoggingInterceptor()
+            .setLevel(HttpLoggingInterceptor.Level.BODY)
+        val gson = Gson()
+        val client = OkHttpClient.Builder()
+            .addInterceptor(loggingInterceptor)
+            .build()
+        val request = Request.Builder()
+            .post(gson.toJson(AddReq(token,name,num.toInt())).toRequestBody(contentType))
+            .url(serverUrl.add_product)
+            .build()
+
+        val call = client.newCall(request)
+
+        call.enqueue(object : Callback {//здесь погибли мои надежды
+        override fun onFailure(call: Call, e: IOException) {
+            e.printStackTrace()
+        }
+            override fun onResponse(call: Call, response: Response) {
+                if (response.isSuccessful) {
+                    val responseBodyString = response.body!!.string()
+                    val jsonResp = gson.fromJson(responseBodyString, AddResp::class.java)
+                    if (jsonResp.status == "success"){
+                        createFood(name,num.toString())
+                    }
+
+                } else {
+                    throw IllegalStateException("Oops")
+                }
+
+
+            }
+        })
+    }
+
+    private fun appdateList(){
+        unredadapter.notifyDataSetChanged()
+    }
+
     private fun onAddPressed() {
         val dialogBinding: PrintFoodBinding = PrintFoodBinding.inflate(layoutInflater)
         val dialog: AlertDialog = AlertDialog.Builder(this)
@@ -131,8 +221,9 @@ class MainActivity : AppCompatActivity() {
                 val name = dialogBinding.editTextTextFoodName.text.toString()
                 val num = dialogBinding.editTextTextFoodNum.text.toString()
                 if (name.isNotBlank()) {
-                    if (num.isNotBlank()) createFood(name,num)
-                    else createFood(name)
+                    if (num.isNotBlank()) {
+                        addElemenToServer(name, num.toLong())
+                    } else addElemenToServer(name, 1)
                 }
             }.create()
         dialog.show()
@@ -144,10 +235,91 @@ class MainActivity : AppCompatActivity() {
         startActivityForResult(intent, EDIT_REQUES_CODE)
     }
 
+    private fun delateAllFoodsFromServer(){
+        val loggingInterceptor = HttpLoggingInterceptor()
+            .setLevel(HttpLoggingInterceptor.Level.BODY)
+        val gson = Gson()
+        val client = OkHttpClient.Builder()
+            .addInterceptor(loggingInterceptor)
+            .build()
+        val request = Request.Builder()
+            .post(gson.toJson(DellToken(token)).toRequestBody(contentType))
+            .url(serverUrl.delete_all_products)
+            .build()
+        val call = client.newCall(request)
+        call.enqueue(object : Callback {//здесь погибли мои надежды
+        override fun onFailure(call: Call, e: IOException) {
+            e.printStackTrace()
+        }
+            override fun onResponse(call: Call, response: Response) {
+                if (response.isSuccessful) {
+                    val responseBodyString = response.body!!.string()
+                    val jsonResp = gson.fromJson(responseBodyString, DellAllReq::class.java)
+                    if (jsonResp.status == "success") {
+
+                    } else {
+                        println(responseBodyString)
+                    }
+
+                } else {
+                    throw IllegalStateException("Oops")
+                }
+
+
+            }
+        })
+
+    }
+
+    private fun setFoodlistToServer(){
+
+        for (iter in data.getFoods()) {
+            iter.name?.let { addElemenToServer(it, iter.num) }
+        }
+
+    }
+
+
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
         super.onActivityResult(requestCode, resultCode, data)
         if (requestCode == EDIT_REQUES_CODE  && resultCode == RESULT_OK) {
-            data?.getParcelableArrayListExtra<FoodItem>(EditActivity.FOOD_LIST)?.let { this.data.setFood(it) }// это перенос изменений в основном списке, если в EditAction чето вернула (возвращает сипок если его изменили в ручную)
+            data?.getParcelableArrayListExtra<FoodItem>(EditActivity.FOOD_LIST)?.let { this.data.setFood(it) }
+            val loggingInterceptor = HttpLoggingInterceptor()
+                .setLevel(HttpLoggingInterceptor.Level.BODY)
+            val gson = Gson()
+            val client = OkHttpClient.Builder()
+                .addInterceptor(loggingInterceptor)
+                .build()
+            val request = Request.Builder()
+                .post(gson.toJson(UserTokenJson(token)).toRequestBody(contentType))
+                .url(serverUrl.get_all_products)
+                .build()
+
+            val call = client.newCall(request)
+
+            call.enqueue(object : Callback {//здесь погибли мои надежды
+            override fun onFailure(call: Call, e: IOException) {
+                e.printStackTrace()
+            }
+                override fun onResponse(call: Call, response: Response) {
+                    if (response.isSuccessful) {
+                        val responseBodyString = response.body!!.string()
+                        val jsonResp = gson.fromJson(responseBodyString, GetAllResp::class.java)
+                        if (jsonResp.status == "success") {
+                            val arr = jsonResp.message.values?.product_list
+                            if (arr != null) {
+                                delateAllFoodsFromServer()
+                                setFoodlistToServer()
+                            }
+                        }
+
+                    } else {
+                        throw IllegalStateException("Oops")
+                    }
+
+
+                }
+            })
         }
         else if (requestCode == 100) {//ответ с камеры
 //////////Перевод ответа в Jpg//////////////////////////
@@ -189,11 +361,10 @@ class MainActivity : AppCompatActivity() {
             val request = Request.Builder()
                 .post(body2)
                 .addHeader("accept", "application/json")
-                .url(serverUrl.check_photo_with_list_of_products + "?user_token=" + token)
-//                .url("https://webhook.site/85b64cb6-4a29-4ce3-9d67-647e7b2cec77" + "?user_token=" + token)
+//                .url(serverUrl.check_photo_with_list_of_products + "?user_token=" + token)
+                .url("https://webhook.site/85b64cb6-4a29-4ce3-9d67-647e7b2cec77" + "?user_token=" + token)
                 .build()
             val call = client.newCall(request)
-            var grespons : Response
 //////// крч если я не успею дописать логику за ночь то запросы прописываются следующим образом/////////////
             call.enqueue(object : Callback {
                 override fun onFailure(call: Call, e: IOException) {
@@ -203,7 +374,10 @@ class MainActivity : AppCompatActivity() {
                 override fun onResponse(call: Call, response: Response) {
                     if (response.isSuccessful) {
                         val responseBodyString = response.body!!.toString()
-                        println(gson.fromJson(responseBodyString, String::class.java))
+                        val fotoReq = gson.fromJson(responseBodyString, FotoRequest::class.java)
+                        if (fotoReq.status == "success") {
+                            fotoReq.message.value?.let { deleteFood(it.product) }
+                        }
                     }
 
                 }
@@ -236,13 +410,16 @@ class MainActivity : AppCompatActivity() {
 
     private fun createFood(name: String) {
         data.add(name)
-        unredadapter.notifyDataSetChanged()
     }
 
     private fun createFood(name: String, num: String) {
         data.add(name, num)
-        unredadapter.notifyDataSetChanged()
     }
+
+    private fun deleteFood(name: String){
+        data.remove(name)
+    }
+
 
     private fun decripPosition(name: String) {
         data.decFood(name)

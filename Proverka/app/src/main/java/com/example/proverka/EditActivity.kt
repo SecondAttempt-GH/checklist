@@ -29,7 +29,8 @@ class EditActivity : AppCompatActivity(){
         data = FoodList()
         (savedInstanceState?.getParcelableArrayList<FoodItem>(KEY_DATA) ?: intent.getParcelableArrayListExtra(FOOD_LIST))?.let {
             data.setFood(it)
-        }// savedInstanceState?.getParcelableArrayList<FoodItem>(KEY_DATA) это данные которые пришли из Main
+        }
+        //savedInstanceState?.getParcelableArrayList<FoodItem>(KEY_DATA) это данные которые пришли из Main
         //intent.getParcelableArrayListExtra(FOOD_LIST)) это данные нанешней активити сделана хуй знает зачам, но так в гайде было написано, вроде просто позволяет не потерять изменения если данная активити каким-то образом вдруг решила перезапуститься
         setupList()
     }
