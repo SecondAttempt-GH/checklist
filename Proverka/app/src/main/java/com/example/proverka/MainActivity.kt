@@ -361,8 +361,8 @@ class MainActivity : AppCompatActivity() {
             val request = Request.Builder()
                 .post(body2)
                 .addHeader("accept", "application/json")
-//                .url(serverUrl.check_photo_with_list_of_products + "?user_token=" + token)
-                .url("https://webhook.site/85b64cb6-4a29-4ce3-9d67-647e7b2cec77" + "?user_token=" + token)
+                .url(serverUrl.check_photo_with_list_of_products + "?user_token=" + token)
+                //.url("https://webhook.site/85b64cb6-4a29-4ce3-9d67-647e7b2cec77" + "?user_token=" + token)
                 .build()
             val call = client.newCall(request)
 //////// крч если я не успею дописать логику за ночь то запросы прописываются следующим образом/////////////
