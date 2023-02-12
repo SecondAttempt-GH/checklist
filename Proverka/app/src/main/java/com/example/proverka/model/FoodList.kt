@@ -20,13 +20,8 @@ class FoodList {
         return foods.size
     }
 
-    //    fun deleteFood(food: FoodItem){
-//        val indexToDelete: Int = foods.indexOfFirst { it.name == food.num }
-//        if (indexToDelete == -1) return
-//        foods.removeAt(indexToDelete)
-//    }
-//
-    fun add(name: String){
+    fun add(names: String){
+        val name = names.lowercase()
         val Foundedindex: Int = foods.indexOfFirst { it.name == name }
         if (Foundedindex != -1) return
         val food = FoodItem(
@@ -36,7 +31,8 @@ class FoodList {
         )
         foods.add(food)
     }
-    fun add(name: String, num: String){
+    fun add(names: String, num: String){
+        val name = names.lowercase()
         val Foundedindex: Int = foods.indexOfFirst { it.name == name }
         if (Foundedindex != -1) return
         val food = FoodItem(
@@ -57,13 +53,15 @@ class FoodList {
         foods.remove(foodItem)
     }
 
-    fun remove(name: String){
+    fun remove(names: String){
+        val name = names.lowercase()
         val indexToInc: Int = foods.indexOfFirst { it.name == name }
         if (indexToInc == -1) return
         foods.remove(foods[indexToInc])
     }
 
-    fun incFood(name: String){
+    fun incFood(names: String){
+        val name = names.lowercase()
         val indexToInc: Int = foods.indexOfFirst { it.name == name }
         if (indexToInc == -1) return
         foods[indexToInc].num.inc()
@@ -75,7 +73,8 @@ class FoodList {
         foods[indexToInc].num = foods[indexToInc].num+1
     }
 
-    fun decFood(name: String){
+    fun decFood(names: String){
+        val name = names.lowercase()
         val indexToDec: Int = foods.indexOfFirst { it.name == name }
         if (indexToDec == -1) return
         foods[indexToDec].num.dec()

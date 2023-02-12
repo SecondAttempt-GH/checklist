@@ -11,7 +11,6 @@ import com.example.proverka.databinding.DialogEditNameBinding
 import com.example.proverka.model.FoodItem
 import com.example.proverka.model.FoodList
 
-// Экран изменений
 
 class EditActivity : AppCompatActivity(){
 
@@ -30,8 +29,6 @@ class EditActivity : AppCompatActivity(){
         (savedInstanceState?.getParcelableArrayList<FoodItem>(KEY_DATA) ?: intent.getParcelableArrayListExtra(FOOD_LIST))?.let {
             data.setFood(it)
         }
-        //savedInstanceState?.getParcelableArrayList<FoodItem>(KEY_DATA) это данные которые пришли из Main
-        //intent.getParcelableArrayListExtra(FOOD_LIST)) это данные нанешней активити сделана хуй знает зачам, но так в гайде было написано, вроде просто позволяет не потерять изменения если данная активити каким-то образом вдруг решила перезапуститься
         setupList()
     }
 
@@ -52,7 +49,7 @@ class EditActivity : AppCompatActivity(){
     }
 
 
-    //// тут происходят изменения буть окуратен они применяются только если нажата кнопка ОК (метод onOkPressed())
+    //// тут происходят изменения
     private fun onPressed(v: View) {
         val food = v.tag as FoodItem
         if (v.id == R.id.dellbtt) {
@@ -92,7 +89,7 @@ class EditActivity : AppCompatActivity(){
     }
 
     private fun onIncPressed(it: FoodItem) {
-        it.name?.let { it1 -> data.incFood(it1) } /// сам уже не помню почему it1 но это функции которые тригерятся при нажатии на кнопки элемента списка. они вызывают метод onPressed и кладут в него Viev на который ты нажал, а в этом View в параметре tag какой это элемент в списке продуктов
+        it.name?.let { it1 -> data.incFood(it1) } /// это функции которые тригерятся при нажатии на кнопки элемента списка. они вызывают метод onPressed и кладут в него Viev на который ты нажал, а в этом View в параметре tag какой это элемент в списке продуктов
         redactableAdapter.notifyDataSetChanged()
     }
 

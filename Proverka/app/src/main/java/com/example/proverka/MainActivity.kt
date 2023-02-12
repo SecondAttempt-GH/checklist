@@ -1,9 +1,10 @@
 package com.example.proverka
 
 import android.app.AlertDialog
-import android.content.Context
+import android.content.ContentValues
 import android.content.Intent
 import android.graphics.Bitmap
+import android.net.Uri
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import android.provider.MediaStore
@@ -13,10 +14,8 @@ import android.widget.Toast
 import com.example.proverka.Adapters.FoodUnRedactableAdapter
 import com.example.proverka.databinding.ActivityMainBinding
 import com.example.proverka.databinding.PrintFoodBinding
+import com.example.proverka.model.*
 import com.example.proverka.model.AuthResp.*
-import com.example.proverka.model.FoodItem
-import com.example.proverka.model.FoodList
-import com.example.proverka.model.FotoRequest
 import okhttp3.logging.HttpLoggingInterceptor
 import com.google.gson.Gson
 import okhttp3.*
@@ -24,9 +23,6 @@ import okhttp3.MediaType.Companion.toMediaType
 import okhttp3.MediaType.Companion.toMediaTypeOrNull
 import okhttp3.RequestBody.Companion.toRequestBody
 import java.io.ByteArrayOutputStream
-import java.io.File
-import java.io.FileNotFoundException
-import java.io.FileOutputStream
 import java.io.IOException
 
 
@@ -35,30 +31,27 @@ class MainActivity : AppCompatActivity() {
     private lateinit var binding: ActivityMainBinding
     private lateinit var data: FoodList
     private lateinit var token: String
+    private lateinit var imageUri: Uri
     private lateinit var unredadapter: FoodUnRedactableAdapter
     val contentType = "application/json".toMediaType()
-    val serverUrl = ServerUrl("https://f539-176-77-61-151.eu.ngrok.io")
+    val serverUrl = ServerUrl("https://662b-176-77-61-151.eu.ngrok.io")
 
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         binding = ActivityMainBinding.inflate(layoutInflater)
         setContentView(binding.root)
-
-
-
         if (savedInstanceState ==null || !savedInstanceState.containsKey(FOOD_LIST)){
             data = FoodList()
         } else {
             savedInstanceState.getParcelableArrayList<FoodItem>(FOOD_LIST)?.let { data.setFood(it) }
         }
-
         setupToken()
         setipDataFromServer()
         setupList()
         supportActionBar?.title = "Admin"
         binding.addButton.setOnClickListener {onAddPressed()}
-        binding.fotobutton.setOnClickListener {onFotoPressed()}//кнопка с камерой
+        binding.fotobutton.setOnClickListener {onPhotoPressed()}
         binding.editbutton.setOnClickListener {onEditPressed()}
 
     }
@@ -72,8 +65,6 @@ class MainActivity : AppCompatActivity() {
         if (item.itemId == R.id.apdateB) appdateList()
         return true
     }
-
-
 
     private fun setipDataFromServer(){
         val loggingInterceptor = HttpLoggingInterceptor()
@@ -90,7 +81,7 @@ class MainActivity : AppCompatActivity() {
         val call = client.newCall(request)
         data = FoodList()
 
-        call.enqueue(object : Callback {//здесь погибли мои надежды
+        call.enqueue(object : Callback {
         override fun onFailure(call: Call, e: IOException) {
             e.printStackTrace()
         }
@@ -103,7 +94,7 @@ class MainActivity : AppCompatActivity() {
                         println(arr?.size.toString() + " array size")
                         if (arr != null) {
                             for (itr in arr) {
-                                data.add(itr.product_name)
+                                data.add(itr.product_name, itr.product_quantity.toString())
                             }
                         }
                     }
@@ -130,8 +121,8 @@ class MainActivity : AppCompatActivity() {
             val client = OkHttpClient.Builder()
                 .build()
             val request = Request.Builder()
-                .post(gson.toJson(null).toRequestBody(contentType))// если здесь сделать get запрос
-                .url(serverUrl.authorization_user)// а здесь поставить адрес ютуба то метод call.enqueue снизу работает
+                .post(gson.toJson(null).toRequestBody(contentType))
+                .url(serverUrl.authorization_user)
                 .build()
 
             val call = client.newCall(request)
@@ -168,8 +159,13 @@ class MainActivity : AppCompatActivity() {
         binding.FoodListView.adapter = unredadapter
     }
 
-    private fun onFotoPressed() {
-        val intent = Intent(MediaStore.ACTION_IMAGE_CAPTURE)// ACTION_IMAGE_CAPTURE это системная активити которая возвращает фотку в формате BMP
+    private fun onPhotoPressed() {
+        val values = ContentValues()
+        values.put(MediaStore.Images.Media.TITLE, "New Picture")
+        values.put(MediaStore.Images.Media.DESCRIPTION, "From Camera")
+        imageUri = getContentResolver().insert(MediaStore.Images.Media.EXTERNAL_CONTENT_URI, values)!!
+        val intent = Intent(MediaStore.ACTION_IMAGE_CAPTURE)
+        intent.putExtra(MediaStore.EXTRA_OUTPUT, imageUri)
         startActivityForResult(intent, 100)// отлов приходящего результата происходит в методе onActivityResult по коду 100
     }
 
@@ -187,7 +183,7 @@ class MainActivity : AppCompatActivity() {
 
         val call = client.newCall(request)
 
-        call.enqueue(object : Callback {//здесь погибли мои надежды
+        call.enqueue(object : Callback {
         override fun onFailure(call: Call, e: IOException) {
             e.printStackTrace()
         }
@@ -198,12 +194,9 @@ class MainActivity : AppCompatActivity() {
                     if (jsonResp.status == "success"){
                         createFood(name,num.toString())
                     }
-
                 } else {
                     throw IllegalStateException("Oops")
                 }
-
-
             }
         })
     }
@@ -247,7 +240,7 @@ class MainActivity : AppCompatActivity() {
             .url(serverUrl.delete_all_products)
             .build()
         val call = client.newCall(request)
-        call.enqueue(object : Callback {//здесь погибли мои надежды
+        call.enqueue(object : Callback {
         override fun onFailure(call: Call, e: IOException) {
             e.printStackTrace()
         }
@@ -256,29 +249,22 @@ class MainActivity : AppCompatActivity() {
                     val responseBodyString = response.body!!.string()
                     val jsonResp = gson.fromJson(responseBodyString, DellAllReq::class.java)
                     if (jsonResp.status == "success") {
-
                     } else {
                         println(responseBodyString)
                     }
-
                 } else {
                     throw IllegalStateException("Oops")
                 }
-
-
             }
         })
 
     }
 
     private fun setFoodlistToServer(){
-
         for (iter in data.getFoods()) {
             iter.name?.let { addElemenToServer(it, iter.num) }
         }
-
     }
-
 
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
         super.onActivityResult(requestCode, resultCode, data)
@@ -297,7 +283,7 @@ class MainActivity : AppCompatActivity() {
 
             val call = client.newCall(request)
 
-            call.enqueue(object : Callback {//здесь погибли мои надежды
+            call.enqueue(object : Callback {
             override fun onFailure(call: Call, e: IOException) {
                 e.printStackTrace()
             }
@@ -312,30 +298,26 @@ class MainActivity : AppCompatActivity() {
                                 setFoodlistToServer()
                             }
                         }
-
                     } else {
                         throw IllegalStateException("Oops")
                     }
-
-
                 }
             })
         }
         else if (requestCode == 100) {//ответ с камеры
-//////////Перевод ответа в Jpg//////////////////////////
-            val imageBitmap = data?.extras?.get("data") as Bitmap
 
+            var imageBitmap: Bitmap
 
-            val savedJPGImage = saveImage(imageBitmap, this) as File
-
-//////////////Пример работы с Http запросами/////////////////////
-
+            try {
+                imageBitmap = MediaStore.Images.Media.getBitmap(getContentResolver(), imageUri)
+            } catch (e: java.lang.Exception) {
+                return
+            }
 
             val stream = ByteArrayOutputStream()
-            imageBitmap.compress(Bitmap.CompressFormat.JPEG, 100, stream)
+
+            imageBitmap.compress(Bitmap.CompressFormat.JPEG, 80, stream)
             val byteArray = stream.toByteArray()
-
-
 
             val loggingInterceptor = HttpLoggingInterceptor()
                 .setLevel(HttpLoggingInterceptor.Level.BODY)
@@ -344,28 +326,19 @@ class MainActivity : AppCompatActivity() {
                 .addInterceptor(loggingInterceptor)
                 .build()
 
-//            val requestBodyString = gson.toJson(savedJPGImage.readBytes())
-
-
-//            val okHttpRequestBody = requestBodyString.toRequestBody("multipart/form-data".toMediaTypeOrNull())
-            val okHttpRequestBody = byteArray.toRequestBody("multipart/form-data".toMediaType(),0, byteArray.size)
-            val body = MultipartBody.Part.createFormData("photo[content]", "photo", byteArray.toRequestBody("image/*".toMediaTypeOrNull(),0, byteArray.size))
-            println(byteArray.toRequestBody("image/*".toMediaTypeOrNull(),0, byteArray.size).contentType())
             val body2 = MultipartBody.Builder()
                 .setType("multipart/form-data".toMediaType())
                 .addFormDataPart("user_token", token)
                 .addFormDataPart("file", "photo_bytes", byteArray.toRequestBody("bytes".toMediaTypeOrNull(),0, byteArray.size))
                 .build()
 
-
             val request = Request.Builder()
                 .post(body2)
                 .addHeader("accept", "application/json")
                 .url(serverUrl.check_photo_with_list_of_products + "?user_token=" + token)
-                //.url("https://webhook.site/85b64cb6-4a29-4ce3-9d67-647e7b2cec77" + "?user_token=" + token)
+//                .url("https://webhook.site/85b64cb6-4a29-4ce3-9d67-647e7b2cec77")
                 .build()
             val call = client.newCall(request)
-//////// крч если я не успею дописать логику за ночь то запросы прописываются следующим образом/////////////
             call.enqueue(object : Callback {
                 override fun onFailure(call: Call, e: IOException) {
                     e.printStackTrace()
@@ -373,40 +346,23 @@ class MainActivity : AppCompatActivity() {
 
                 override fun onResponse(call: Call, response: Response) {
                     if (response.isSuccessful) {
-                        val responseBodyString = response.body!!.toString()
-                        val fotoReq = gson.fromJson(responseBodyString, FotoRequest::class.java)
-                        if (fotoReq.status == "success") {
-                            fotoReq.message.value?.let { deleteFood(it.product) }
+                        val responseBodyString = response.body!!.string()
+                        val f = false
+                        try {
+                            val fotoReq =
+                                gson.fromJson(responseBodyString, FotoCorResp::class.java)
+                            if (fotoReq.status == "success") {
+                                fotoReq.message.values.product?.let { deleteFood(it) }
+                            }
+                        } catch (e: java.lang.Exception){
+                            return
                         }
                     }
-
                 }
             })
-//////////////////////////////////////////////////////////////////////////////////////////////////////////
-
-
         }
         unredadapter.notifyDataSetChanged()
     }
-
-    private fun saveImage(image: Bitmap, context: Context): File? {
-        val imageFolder = File(context.cacheDir, "images")
-        try {
-            imageFolder.mkdir()
-            val file = File(imageFolder, "tmp_picture.jpg")
-            val stream = FileOutputStream(file)
-            image.compress(Bitmap.CompressFormat.JPEG, 100, stream)
-            stream.flush()
-            stream.close()
-            return file
-        } catch (e: FileNotFoundException) {
-            e.printStackTrace()
-        } catch (e: IOException) {
-            e.printStackTrace()
-        }
-        return null
-    }
-
 
     private fun createFood(name: String) {
         data.add(name)
@@ -420,14 +376,6 @@ class MainActivity : AppCompatActivity() {
         data.remove(name)
     }
 
-
-    private fun decripPosition(name: String) {
-        data.decFood(name)
-    }
-
-
-
-    /////////это вообще забей хуй (Коды ответов кри навигации между активити, чтобы не хардкодить вынес их сюда)///////////////
     companion object{
         @JvmStatic val SAVED_TOKEN = "saved_token"
         @JvmStatic val FOOD_LIST = "FOOD_LIST"

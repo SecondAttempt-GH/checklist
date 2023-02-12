@@ -6,14 +6,12 @@ data class FotoRequest (
     )
 
 class ValuesReq (
-    val product: String,
-    val found_text: String,
-    val time_spend: Long
+    val image: String
     )
 
 class FotoRequestMessage (
     val comment: String,
-    val value: ValuesReq?
+    val value: ValuesReq
     )
 
 

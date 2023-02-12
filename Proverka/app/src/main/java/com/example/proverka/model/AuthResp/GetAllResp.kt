@@ -12,7 +12,8 @@ data class ValuesReq (
 
 data class Product (
     val product_id: Int,
-    val product_name: String
+    val product_name: String,
+    val product_quantity: Int
     )
 
 data class GetAllRespMessage (
