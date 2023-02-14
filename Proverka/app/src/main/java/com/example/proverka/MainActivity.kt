@@ -13,6 +13,7 @@ import android.view.MenuItem
 import android.widget.Toast
 import com.example.proverka.Adapters.FoodUnRedactableAdapter
 import com.example.proverka.databinding.ActivityMainBinding
+import com.example.proverka.databinding.DialogPrintUrlBinding
 import com.example.proverka.databinding.PrintFoodBinding
 import com.example.proverka.model.*
 import com.example.proverka.model.AuthResp.*
@@ -34,7 +35,7 @@ class MainActivity : AppCompatActivity() {
     private lateinit var imageUri: Uri
     private lateinit var unredadapter: FoodUnRedactableAdapter
     val contentType = "application/json".toMediaType()
-    val serverUrl = ServerUrl("https://662b-176-77-61-151.eu.ngrok.io")
+    var serverUrl = ServerUrl("https://a082-176-77-61-151.eu.ngrok.io")
 
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -49,11 +50,39 @@ class MainActivity : AppCompatActivity() {
         setupToken()
         setipDataFromServer()
         setupList()
-        supportActionBar?.title = "Admin"
+        supportActionBar?.title = "Мой лист"
         binding.addButton.setOnClickListener {onAddPressed()}
         binding.fotobutton.setOnClickListener {onPhotoPressed()}
         binding.editbutton.setOnClickListener {onEditPressed()}
 
+    }
+
+    private fun setupBaseUrl(){
+        val dialogBinding: DialogPrintUrlBinding = DialogPrintUrlBinding.inflate(layoutInflater)
+        val dialog: AlertDialog = AlertDialog.Builder(this)
+            .setTitle("Введите ссылку на сервер.")
+            .setView(dialogBinding.root)
+            .setPositiveButton("ОК") { d, which ->
+                val url = dialogBinding.editTextTextFoodName.text.toString()
+                if (url.isNotBlank()) {
+                    serverUrl = ServerUrl(url)
+                }
+            }.create()
+        dialog.show()
+    }
+
+    private fun setupBaseUrlAfterErr(){
+        val dialogBinding: DialogPrintUrlBinding = DialogPrintUrlBinding.inflate(layoutInflater)
+        val dialog: AlertDialog = AlertDialog.Builder(this)
+            .setTitle("Сервер не найден. Введите ссылку снова.")
+            .setView(dialogBinding.root)
+            .setPositiveButton("ОК") { d, which ->
+                val url = dialogBinding.editTextTextFoodName.text.toString()
+                if (url.isNotBlank()) {
+                    serverUrl = ServerUrl(url)
+                }
+            }.create()
+        dialog.show()
     }
 
     override fun onCreateOptionsMenu(menu: Menu?): Boolean {
@@ -91,7 +120,6 @@ class MainActivity : AppCompatActivity() {
                     val jsonResp = gson.fromJson(responseBodyString, GetAllResp::class.java)
                     if (jsonResp.status == "success") {
                         val arr = jsonResp.message.values?.product_list
-                        println(arr?.size.toString() + " array size")
                         if (arr != null) {
                             for (itr in arr) {
                                 data.add(itr.product_name, itr.product_quantity.toString())
@@ -100,7 +128,7 @@ class MainActivity : AppCompatActivity() {
                     }
 
                 } else {
-                    throw IllegalStateException("Oops")
+                    throw IllegalStateException("Упс")
                 }
 
 
@@ -114,7 +142,6 @@ class MainActivity : AppCompatActivity() {
         val editor = sPref.edit()
         var savedToken = sPref.getString(SAVED_TOKEN, "")
         token = savedToken.toString()
-        println(token)
         Toast.makeText(this, savedToken, Toast.LENGTH_SHORT).show();
         if (savedToken == "") {
             val gson = Gson()
@@ -127,7 +154,7 @@ class MainActivity : AppCompatActivity() {
 
             val call = client.newCall(request)
 
-            call.enqueue(object : Callback {//здесь погибли мои надежды
+            call.enqueue(object : Callback {
                 override fun onFailure(call: Call, e: IOException) {
                     e.printStackTrace()
                 }
@@ -142,7 +169,7 @@ class MainActivity : AppCompatActivity() {
 
 
                     } else {
-                        throw IllegalStateException("Oops")
+                        throw IllegalStateException("Упс")
                     }
 
 
@@ -208,9 +235,9 @@ class MainActivity : AppCompatActivity() {
     private fun onAddPressed() {
         val dialogBinding: PrintFoodBinding = PrintFoodBinding.inflate(layoutInflater)
         val dialog: AlertDialog = AlertDialog.Builder(this)
-            .setTitle("Create")
+            .setTitle("Добавить")
             .setView(dialogBinding.root)
-            .setPositiveButton("Add") { d, which ->
+            .setPositiveButton("ОК") { d, which ->
                 val name = dialogBinding.editTextTextFoodName.text.toString()
                 val num = dialogBinding.editTextTextFoodNum.text.toString()
                 if (name.isNotBlank()) {
@@ -246,14 +273,8 @@ class MainActivity : AppCompatActivity() {
         }
             override fun onResponse(call: Call, response: Response) {
                 if (response.isSuccessful) {
-                    val responseBodyString = response.body!!.string()
-                    val jsonResp = gson.fromJson(responseBodyString, DellAllReq::class.java)
-                    if (jsonResp.status == "success") {
-                    } else {
-                        println(responseBodyString)
-                    }
                 } else {
-                    throw IllegalStateException("Oops")
+                    throw IllegalStateException("Упс")
                 }
             }
         })
@@ -299,7 +320,7 @@ class MainActivity : AppCompatActivity() {
                             }
                         }
                     } else {
-                        throw IllegalStateException("Oops")
+                        throw IllegalStateException("Упс")
                     }
                 }
             })
@@ -336,7 +357,6 @@ class MainActivity : AppCompatActivity() {
                 .post(body2)
                 .addHeader("accept", "application/json")
                 .url(serverUrl.check_photo_with_list_of_products + "?user_token=" + token)
-//                .url("https://webhook.site/85b64cb6-4a29-4ce3-9d67-647e7b2cec77")
                 .build()
             val call = client.newCall(request)
             call.enqueue(object : Callback {
