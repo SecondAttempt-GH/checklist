@@ -9,22 +9,63 @@
     <option name="autoReloadType" value="NONE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="8560b4fc-5ad1-448a-8832-914772b5ee0d" name="Changes" comment="Приложение запущено и настроено" />
+    <list default="true" id="2e5a8b42-185f-420b-ae26-226351cda9d0" name="Changes" comment="Добавлен обработчик ошибок" />
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
     <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
     <option name="LAST_RESOLUTION" value="IGNORE" />
-  </component>
-  <component name="ChangesViewManager">
-    <option name="groupingKeys">
-      <option value="module" />
-    </option>
   </component>
   <component name="ExecutionTargetManager" SELECTED_TARGET="device_and_snapshot_combo_box_target[C:\Users\vnich\.android\avd\Pixel_2_API_30.avd]" />
   <component name="ExternalProjectsData">
     <projectState path="$PROJECT_DIR$">
       <ProjectState />
     </projectState>
+  </component>
+  <component name="ExternalProjectsManager">
+    <system id="GRADLE">
+      <state>
+        <task path="$PROJECT_DIR$/app">
+          <activation />
+        </task>
+        <projects_view>
+          <tree_state>
+            <expand>
+              <path>
+                <item name="" type="6a2764b6:ExternalProjectsStructure$RootNode" />
+                <item name="Proverka" type="f1a62948:ProjectNode" />
+              </path>
+              <path>
+                <item name="" type="6a2764b6:ExternalProjectsStructure$RootNode" />
+                <item name="Proverka" type="f1a62948:ProjectNode" />
+                <item name="app" type="2d1252cf:ModuleNode" />
+              </path>
+              <path>
+                <item name="" type="6a2764b6:ExternalProjectsStructure$RootNode" />
+                <item name="Proverka" type="f1a62948:ProjectNode" />
+                <item name="app" type="2d1252cf:ModuleNode" />
+                <item name="Tasks" type="e4a08cd1:TasksNode" />
+              </path>
+              <path>
+                <item name="" type="6a2764b6:ExternalProjectsStructure$RootNode" />
+                <item name="Proverka" type="f1a62948:ProjectNode" />
+                <item name="app" type="2d1252cf:ModuleNode" />
+                <item name="Tasks" type="e4a08cd1:TasksNode" />
+                <item name="other" type="c8890929:TasksNode$1" />
+              </path>
+            </expand>
+            <select />
+          </tree_state>
+        </projects_view>
+      </state>
+    </system>
+  </component>
+  <component name="FileTemplateManagerImpl">
+    <option name="RECENT_TEMPLATES">
+      <list>
+        <option value="Kotlin Data Class" />
+        <option value="Kotlin Class" />
+      </list>
+    </option>
   </component>
   <component name="Git.Settings">
     <option name="RECENT_BRANCH_BY_REPOSITORY">
@@ -33,11 +74,26 @@
       </map>
     </option>
     <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$/.." />
+    <option name="RESET_MODE" value="HARD" />
+  </component>
+  <component name="GitRewordedCommitMessages">
+    <option name="commitMessagesMapping">
+      <RewordedCommitMessageMapping>
+        <option name="originalMessage" value="Изменения" />
+        <option name="rewordedMessage" value="Revert &quot;Изменения&quot;" />
+      </RewordedCommitMessageMapping>
+    </option>
+    <option name="currentCommit" value="1" />
+    <option name="onto" value="468ac247c6932467143156b609db067255d051b0" />
   </component>
   <component name="MarkdownSettingsMigration">
     <option name="stateVersion" value="1" />
   </component>
-  <component name="ProjectId" id="2LaiXQd1xW2iG68jMGggceoZ0Qw" />
+  <component name="ProblemsViewState">
+    <option name="selectedTabId" value="CurrentFile" />
+  </component>
+  <component name="ProjectId" id="2Ln9LFKCtUFYtn6LjeUyuiwe4vT" />
+  <component name="ProjectLevelVcsManager" settingsEditedManually="true" />
   <component name="ProjectViewState">
     <option name="hideEmptyMiddlePackages" value="true" />
     <option name="showLibraryContents" value="true" />
@@ -47,10 +103,17 @@
     "RunOnceActivity.OpenProjectViewOnStart": "true",
     "RunOnceActivity.ShowReadmeOnStart": "true",
     "RunOnceActivity.cidr.known.project.marker": "true",
+    "SHARE_PROJECT_CONFIGURATION_FILES": "true",
     "cidr.known.project.marker": "true",
-    "last_opened_file_path": "C:/Users/vnich/Documents/Code/Python/checklist/Proverka"
+    "last_opened_file_path": "C:/Users/vnich/Documents/Code/Java/checklist/Proverka/app/src/main/res/layout",
+    "settings.editor.selected.configurable": "project.propVCSSupport.DirectoryMappings"
   }
 }]]></component>
+  <component name="RecentsManager">
+    <key name="CopyFile.RECENT_KEYS">
+      <recent name="C:\Users\vnich\Documents\Code\Java\checklist\Proverka\app\src\main\res\layout" />
+    </key>
+  </component>
   <component name="RunManager">
     <configuration name="app" type="AndroidRunConfigurationType" factoryName="Android App">
       <module name="Proverka.app.main" />
@@ -112,22 +175,67 @@
     </configuration>
   </component>
   <component name="SpellCheckerSettings" RuntimeDictionaries="0" Folders="0" CustomDictionaries="0" DefaultDictionary="application-level" UseSingleDictionary="true" transferred="true" />
+  <component name="SvnConfiguration">
+    <configuration>C:\Users\vnich\AppData\Roaming\Subversion</configuration>
+  </component>
   <component name="TaskManager">
-    <task active="true" id="Default" summary="Default task">
-      <changelist id="8560b4fc-5ad1-448a-8832-914772b5ee0d" name="Changes" comment="" />
-      <created>1676115632943</created>
-      <option name="number" value="Default" />
-      <option name="presentableId" value="Default" />
-      <updated>1676115632943</updated>
-    </task>
-    <task id="LOCAL-00001" summary="Приложение запущено и настроено">
-      <created>1676117237380</created>
+    <task id="LOCAL-00001" summary="Переписаны коды, отвечающие за запросы/ответы">
+      <created>1676400345121</created>
       <option name="number" value="00001" />
       <option name="presentableId" value="LOCAL-00001" />
       <option name="project" value="LOCAL" />
-      <updated>1676117237380</updated>
+      <updated>1676400345121</updated>
     </task>
-    <option name="localTasksCounter" value="2" />
+    <task id="LOCAL-00002" summary="Все запросы вынесены в отдельный класс">
+      <created>1676406364895</created>
+      <option name="number" value="00002" />
+      <option name="presentableId" value="LOCAL-00002" />
+      <option name="project" value="LOCAL" />
+      <updated>1676406364895</updated>
+    </task>
+    <task id="LOCAL-00003" summary="Внесены правки в RequestHandler.kt и добавлен загрузчик данных, ожидающий загрузки с сервеа">
+      <created>1676408033878</created>
+      <option name="number" value="00003" />
+      <option name="presentableId" value="LOCAL-00003" />
+      <option name="project" value="LOCAL" />
+      <updated>1676408033878</updated>
+    </task>
+    <task id="LOCAL-00004" summary="Рефакторинг вьюшек и обновление добавления продукта и его редактирования">
+      <created>1676412282019</created>
+      <option name="number" value="00004" />
+      <option name="presentableId" value="LOCAL-00004" />
+      <option name="project" value="LOCAL" />
+      <updated>1676412282019</updated>
+    </task>
+    <task active="true" id="Default" summary="Default task">
+      <changelist id="2e5a8b42-185f-420b-ae26-226351cda9d0" name="Changes" comment="Рефакторинг вьюшек и обновление добавления продукта и его редактирования" />
+      <created>1676495926592</created>
+      <option name="number" value="Default" />
+      <option name="presentableId" value="Default" />
+      <updated>1676495926592</updated>
+    </task>
+    <task id="LOCAL-00005" summary="Произведен рефакторинг изменения и удаления продуктов, так же исправлена ошибка из-за которой можно было указывать меньше 1 товара">
+      <created>1676499029189</created>
+      <option name="number" value="00005" />
+      <option name="presentableId" value="LOCAL-00005" />
+      <option name="project" value="LOCAL" />
+      <updated>1676499029189</updated>
+    </task>
+    <task id="LOCAL-00006" summary="Добавлено вычеркивание товара на клиенте">
+      <created>1676499763206</created>
+      <option name="number" value="00006" />
+      <option name="presentableId" value="LOCAL-00006" />
+      <option name="project" value="LOCAL" />
+      <updated>1676499763206</updated>
+    </task>
+    <task id="LOCAL-00007" summary="Добавлен обработчик ошибок">
+      <created>1676501867840</created>
+      <option name="number" value="00007" />
+      <option name="presentableId" value="LOCAL-00007" />
+      <option name="project" value="LOCAL" />
+      <updated>1676501867840</updated>
+    </task>
+    <option name="localTasksCounter" value="8" />
     <servers />
   </component>
   <component name="Vcs.Log.Tabs.Properties">
@@ -142,7 +250,13 @@
     </option>
   </component>
   <component name="VcsManagerConfiguration">
-    <MESSAGE value="Приложение запущено и настроено" />
-    <option name="LAST_COMMIT_MESSAGE" value="Приложение запущено и настроено" />
+    <MESSAGE value="Переписаны коды, отвечающие за запросы/ответы" />
+    <MESSAGE value="Все запросы вынесены в отдельный класс" />
+    <MESSAGE value="Внесены правки в RequestHandler.kt и добавлен загрузчик данных, ожидающий загрузки с сервеа" />
+    <MESSAGE value="Рефакторинг вьюшек и обновление добавления продукта и его редактирования" />
+    <MESSAGE value="Произведен рефакторинг изменения и удаления продуктов, так же исправлена ошибка из-за которой можно было указывать меньше 1 товара" />
+    <MESSAGE value="Добавлено вычеркивание товара на клиенте" />
+    <MESSAGE value="Добавлен обработчик ошибок" />
+    <option name="LAST_COMMIT_MESSAGE" value="Добавлен обработчик ошибок" />
   </component>
 </project>

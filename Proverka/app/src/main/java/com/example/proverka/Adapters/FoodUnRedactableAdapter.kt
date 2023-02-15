@@ -3,31 +3,30 @@ package com.example.proverka.Adapters
 import android.content.Context
 import android.view.LayoutInflater
 import android.view.View
-import android.view.View.OnClickListener
 import android.view.ViewGroup
 import android.widget.BaseAdapter
 import com.example.proverka.databinding.ItemFoodUnredactableBinding
-import com.example.proverka.model.FoodItem
-import com.example.proverka.model.FoodList
+import com.example.proverka.model.ProductItem
+import com.example.proverka.model.ProductStorage
 
 
-typealias  AddButtonListener = (FoodItem) -> Unit
+typealias  AddButtonListener = (ProductItem) -> Unit
 
 class FoodUnRedactableAdapter(
-    private val foods: FoodList
+    private val products: ProductStorage
 
     ): BaseAdapter() {
 
-    override fun getItem(position: Int): FoodItem {
-        return foods.getItem(position)
+    override fun getItem(position: Int): ProductItem? {
+        return products.getProduct(position)
     }
 
     override fun getItemId(position: Int): Long {
-        return foods.getItem(position).id
+        return products.getProduct(position)?.productId?.toLong()!!
     }
 
     override fun getCount(): Int {
-        return foods.getSize()
+        return products.getSize()
     }
 
     override fun getView(position: Int, convertView: View?, parent: ViewGroup): View {
@@ -35,13 +34,12 @@ class FoodUnRedactableAdapter(
             convertView?.tag as ItemFoodUnredactableBinding? ?:
             createUnBinding(parent.context)
 
-        val food:FoodItem = getItem(position)
+        val product: ProductItem = getItem(position) ?: return binding.root
 
-        binding.foodName.text = food.name
-        binding.foodNum.text = food.num.toString()
+        binding.foodName.text = product.productName
+        binding.foodNum.text = product.productQuantity.toString()
 
         return binding.root
-
     }
 
     private fun createUnBinding(context: Context): ItemFoodUnredactableBinding {
