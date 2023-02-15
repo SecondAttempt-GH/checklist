@@ -22,11 +22,11 @@ async def check_photo_with_list_of_products(user_token: str = Form(...), file: U
     """
         Получает фотку и проверяет есть ли продукт в списке с таким же именим
     :param user_token:
-    :param photo_bytes:
+    :param file:
     :return:
     """
     answer = AnswerBuilder()
-    condition, products = await database_commands.try_get_all_products_user(user_token)
+    condition, products = await database_commands.try_get_all_products_user(user_token, True)
     if not condition:
         answer.set_status(AnswerStatus.error).set_comment("Не удалось получить данные из БД")
         return answer.get_result()
@@ -35,30 +35,23 @@ async def check_photo_with_list_of_products(user_token: str = Form(...), file: U
     photo_bytes = await file.read()
     result_determine = determinant.to_determine(photo_bytes)
 
-    # Дефолтные значения равны "", 0 так как нужно поддержать сервер
     if result_determine.found_text is None:
-        answer.set_status(AnswerStatus.error). \
-            set_comment("Не удалось найти текст на изображение"). \
-            add_value("product", ""). \
-            add_value("found_text", ""). \
-            add_value("time_spent", 0)
+        answer.set_status(AnswerStatus.error).set_comment("Не удалось найти текст на изображение")
         return answer.get_result()
 
     algorithm = AlgorithmForComparingOffers()
-    for product in [p[0] for p in products]:
-        coincidence = algorithm.check(product, result_determine.found_text)
+    for product_id, product_name in [(p[0], p[1]) for p in products]:
+        coincidence = algorithm.check(product_name, result_determine.found_text)
         if coincidence:
+            await database_commands.try_delete_product(user_token, product_id)
             answer.set_status(AnswerStatus.success). \
-                set_comment(f"Продукт {product} вычеркнут из списка"). \
-                add_value("product", product). \
+                set_comment(f"Продукт {product_name} вычеркнут из списка"). \
+                add_value("product", product_name). \
                 add_value("found_text", result_determine.found_text). \
-                add_value("time_spent", result_determine.time_spent)
+                add_value("time_spent", result_determine.time_spent). \
+                add_value("product_id", product_id)
             return answer.get_result()
-    answer.set_status(AnswerStatus.error). \
-        set_comment(f"Не удалось найти продукт ({result_determine.found_text}) в списках пользователя ({user_token})").\
-        add_value("product", ""). \
-        add_value("found_text", ""). \
-        add_value("time_spent", 0)
+    answer.set_status(AnswerStatus.error).set_comment(f"Не удалось найти продукт ({result_determine.found_text}) в списках пользователя ({user_token})")
     return answer.get_result()
 
 
