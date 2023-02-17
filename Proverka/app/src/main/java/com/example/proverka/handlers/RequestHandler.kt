@@ -134,7 +134,7 @@ object RequestHandler {
     fun sendRequestForCheckPhoto(
         userToken: String,
         photoBytes: ByteArray,
-        onSuccess: (product: ProductAnswer) -> Unit
+        onSuccess: (product: ProductAnswer?) -> Unit
     ) {
         val loggingInterceptor = HttpLoggingInterceptor()
             .setLevel(HttpLoggingInterceptor.Level.BODY)
@@ -171,7 +171,11 @@ object RequestHandler {
                         if (getCheckStatusAndMessageResponse(jsonResp.status, jsonResp.message)) {
                             val values = jsonResp.message?.values!!
                             onSuccess(ProductAnswer(values.productId, values.productName, 1))
+                        }else{
+                            onSuccess(null)
                         }
+                    }else{
+                        onSuccess(null)
                     }
                 } catch (e: IOException) {
                     e.localizedMessage?.let { Log.e(TAG, it) };
