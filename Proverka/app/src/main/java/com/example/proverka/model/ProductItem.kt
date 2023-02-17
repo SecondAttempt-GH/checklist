@@ -9,45 +9,43 @@ class ProductItem(
     var productId: Int,
     var productName: String?,
     var productQuantity: Int = 1,
-    private var isChanged: Boolean = false,
-    private var isRemoved: Boolean = false
+    private var isChanged: Int = 0,
+    private var isRemoved: Int = 0
 ) : Parcelable {
-    @RequiresApi(Build.VERSION_CODES.Q)
     constructor(parcel: Parcel) : this(
         parcel.readInt(),
         parcel.readString(),
         parcel.readInt(),
-        parcel.readBoolean(),
-        parcel.readBoolean()
+        parcel.readInt(),
+        parcel.readInt()
     )
 
     fun isRemoved(): Boolean {
-        return isRemoved
+        return isRemoved == 1
     }
 
     fun isChanged(): Boolean {
-        return isChanged
+        return isChanged == 1
     }
 
     fun remove() {
-        isRemoved = true
+        isRemoved = 1
     }
 
     fun change() {
-        isChanged = true
+        isChanged = 1
     }
 
     override fun toString(): String {
         return "$productName/$productQuantity"
     }
 
-    @RequiresApi(Build.VERSION_CODES.Q)
     override fun writeToParcel(parcel: Parcel, flags: Int) {
         parcel.writeInt(productId)
         parcel.writeString(productName)
         parcel.writeInt(productQuantity)
-        parcel.writeBoolean(isChanged)
-        parcel.writeBoolean(isRemoved)
+        parcel.writeInt(isChanged)
+        parcel.writeInt(isRemoved)
     }
 
     override fun describeContents(): Int {

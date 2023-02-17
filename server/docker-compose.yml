@@ -1,0 +1,14 @@
+version: '3.8'
+services:
+  server:
+    restart: always
+    mem_limit: 3072
+    expose:
+      - 80
+    build:  .
+    container_name: "checklist-api-container"
+    volumes:
+      - .:/app
+    ports:
+      - "80:80"
+    command: python3.8 main.py
