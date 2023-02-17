@@ -15,7 +15,7 @@ import java.io.IOException
 
 val applicationContentType = "application/json".toMediaType()
 val multipartFormData = "multipart/form-data".toMediaType()
-val serverUrl = ServerUrl("https://2501-176-77-61-151.eu.ngrok.io")
+val serverUrl = ServerUrl("http://5.188.141.141")
 
 
 object RequestHandler {
