@@ -1,18 +1,13 @@
 version: '3.8'
 services:
-  nginx:
+  server:
     restart: always
     expose:
-      - 8000
-    ports:
-      - "8000:8000"
-    volumes:
-      - ./
-  server:
+      - 80
     build:  .
     container_name: "checklist-api-container"
     volumes:
       - .:/app
     ports:
-      - "8000:8000"
+      - "80:80"
     command: python3.8 main.py
