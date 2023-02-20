@@ -38,7 +38,7 @@ class CameraActivity : AppCompatActivity() {
         cancelBtn = findViewById(R.id.cancel)
         recognizeBtn = findViewById(R.id.recognize)
 
-        cancelBtn.setOnClickListener { onCanselPressed() }
+        cancelBtn.setOnClickListener { onCancelPressed() }
         recognizeBtn.setOnClickListener { onRecognizePressed() }
 
 
@@ -78,7 +78,12 @@ class CameraActivity : AppCompatActivity() {
         }
     }
 
-    private fun onCanselPressed() {
+    private fun onCancelPressed() {
         finish()
+    }
+
+    override fun onSupportNavigateUp(): Boolean {
+        finish()
+        return true
     }
 }
