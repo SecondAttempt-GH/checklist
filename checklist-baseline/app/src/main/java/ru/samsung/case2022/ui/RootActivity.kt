@@ -1,6 +1,5 @@
 package ru.samsung.case2022.ui
 
-import android.app.AlertDialog
 import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageManager
@@ -8,9 +7,6 @@ import android.graphics.Bitmap
 import android.os.Bundle
 import android.util.Log
 import android.view.Menu
-import android.view.View
-import android.view.ViewGroup
-import android.widget.FrameLayout
 import android.widget.Toast
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AppCompatActivity
@@ -28,16 +24,18 @@ import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.launch
 import ru.samsung.case2022.R
 import ru.samsung.case2022.databinding.ActivityMainBinding
-import ru.samsung.case2022.databinding.PrintFoodBinding
-import ru.samsung.case2022.ui.main.MainFragment
 import java.io.ByteArrayOutputStream
 import java.io.IOException
 
 
-private const val FOOD_LIST = "FOOD_LIST"
-private const val EDIT_REQUEST_CODE = 1
-private const val REQUEST_CAMERA = 2
-private const val PREVIEW_REQUEST_CODE = 3
+const val FOOD_LIST = "FOOD_LIST"
+const val TOKEN = "TOKEN"
+const val IMAGE_FROM_CAMERA = "IMAGE_FROM_CAMERA"
+const val EDIT_REQUEST_CODE = 1
+const val REQUEST_CAMERA = 2
+const val PREVIEW_REQUEST_CODE = 3
+const val FOUND_PRODUCT_NAME = "FOUND_PRODUCT_NAME"
+const val FOUND_PRODUCT_ID = "FOUND_PRODUCT_ID"
 
 class RootActivity : AppCompatActivity() {
     private lateinit var binding: ActivityMainBinding
@@ -120,7 +118,7 @@ class RootActivity : AppCompatActivity() {
             runOnUiThread {
                 unredadapter = FoodUnRedactableAdapter()
                 unredadapter.products = productStorage
-                binding.recycler.layoutManager =layoutManager
+                binding.recycler.layoutManager = layoutManager
                 binding.recycler.adapter = unredadapter
 
             }
@@ -145,7 +143,7 @@ class RootActivity : AppCompatActivity() {
             runOnUiThread {
                 unredadapter = FoodUnRedactableAdapter()
                 unredadapter.products = productStorage
-                binding.recycler.layoutManager =layoutManager
+                binding.recycler.layoutManager = layoutManager
                 binding.recycler.adapter = unredadapter
             }
         }
@@ -194,43 +192,38 @@ class RootActivity : AppCompatActivity() {
         }
         //ответ с камеры
         else if (requestCode == REQUEST_CAMERA && resultCode == RESULT_OK) {
-            val intent = Intent(this, EditActivity::class.java)
-            intent.putExtra("data", data?.extras)
-            startActivityForResult(intent, PREVIEW_REQUEST_CODE)
-        }
+            val intent = Intent(this, CameraActivity::class.java)
+            val imageBitmap: Bitmap = data?.extras?.get("data") as Bitmap
+            val byteArrayImage = getByteArray(imageBitmap)
 
-
-        else if (requestCode == PREVIEW_REQUEST_CODE && resultCode == RESULT_OK) {
             GlobalScope.launch {
-                val token = tokenHandler.getToken() ?: return@launch
-                val imageBitmap: Bitmap = data?.extras?.get("data") as Bitmap
-                val byteArrayImage = getByteArray(imageBitmap)
+                val bundle = Bundle()
+                bundle.putString(TOKEN, tokenHandler.getToken())
+                bundle.putByteArray(IMAGE_FROM_CAMERA, byteArrayImage)
 
-//  Оставил на всякий случай
-//                try {
-//                    imageBitmap = MediaStore.Images.Media.getBitmap(getContentResolver(), imageUri)
-//                } catch (e: java.lang.Exception) {
-//                    return@launch
-//                }
-//                val stream = ByteArrayOutputStream()
-//                imageBitmap.compress(Bitmap.CompressFormat.JPEG, 80, stream)
-//                val byteArray = stream.toByteArray()
+                intent.putExtra("bundle", bundle)
+                startActivityForResult(intent, PREVIEW_REQUEST_CODE)
+            }
+        }
+        else if (requestCode == PREVIEW_REQUEST_CODE && resultCode == RESULT_OK && data != null){
+            val bundle = data.getBundleExtra("bundle")
+            if(bundle == null){
+                showInfo("Продукт не найден")
+                return
+            }
 
-                val loaderPhoto = LoaderDataFromServer()
-                val foundProduct = loaderPhoto.checkPhoto(token, byteArrayImage)
+            val productName = bundle.getString(FOUND_PRODUCT_NAME)
+            val productId = bundle.getInt(FOUND_PRODUCT_ID)
 
-                runOnUiThread {
-                    if (foundProduct == null) {
-                        showInfo("Продукт не найден")
-                    } else {
-                        showInfo("Продукт ${foundProduct.productName} вычеркнут")
-                        productStorage.remove(foundProduct.productId)
-                        val correctedProducts =
-                            productStorage.getProducts().filter { p -> !p.isRemoved() }
-                        productStorage.updateProducts(correctedProducts as ArrayList<ProductItem>)
-                        unredadapter.notifyDataSetChanged()
-                    }
-                }
+            if(productName == null || productId == -1){
+                showInfo("Продукт не найден")
+            }else{
+                showInfo("Продукт ${productName} вычеркнут")
+                productStorage.remove(productId)
+                val correctedProducts =
+                    productStorage.getProducts().filter { p -> !p.isRemoved() }
+                productStorage.updateProducts(correctedProducts as ArrayList<ProductItem>)
+                unredadapter.notifyDataSetChanged()
             }
         }
     }
@@ -256,22 +249,4 @@ class RootActivity : AppCompatActivity() {
     private fun showInfo(text: String) {
         Toast.makeText(this, text, Toast.LENGTH_LONG).show()
     }
-}
-
-
-fun View.showSnackbar(
-    view: View,
-    msg: String,
-    length: Int,
-    actionMessage: CharSequence?,
-    action: (View) -> Unit
-) {
-//    val snackbar = Snackbar.make(view, msg, length)
-//    if (actionMessage != null) {
-//        snackbar.setAction(actionMessage) {
-//            action(this)
-//        }.show()
-//    } else {
-//        snackbar.show()
-//    }
 }

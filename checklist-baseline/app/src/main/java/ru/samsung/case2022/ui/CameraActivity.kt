@@ -1,37 +1,99 @@
 package ru.samsung.case2022.ui
 
 import android.content.Intent
-import android.graphics.Bitmap
-import android.net.Uri
+import android.graphics.BitmapFactory
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
-import androidx.core.content.FileProvider
-import ru.samsung.case2022.databinding.ActivityCameraBinding
-import java.io.File
+import android.util.Log
+import android.widget.Button
+import android.widget.ImageView
+import com.example.proverka.handlers.LoaderDataFromServer
+import kotlinx.coroutines.GlobalScope
+import kotlinx.coroutines.launch
+import ru.samsung.case2022.R
 
-/// это не используещиеся активити. сделал чисто чтобы протестить что возвращает камера
+
+private const val TAG = "CameraActivity"
 class CameraActivity : AppCompatActivity() {
 
-    private lateinit var binding: ActivityCameraBinding
-    private lateinit var savedInrent: Bundle
 
+    private var dataToken: String? = null
+    private lateinit var dataImage: ByteArray
+
+    private lateinit var previous: ImageView
+    private lateinit var cancelBtn: Button
+    private lateinit var recognizeBtn: Button
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        binding = ActivityCameraBinding.inflate(layoutInflater).also { setContentView(it.root) }
-        binding.cancel.setOnClickListener(){onCanselPressed()}
-        binding.recognize.setOnClickListener(){onRecognizePressed()}
-        binding.preview.setImageBitmap(savedInstanceState?.getBundle("data") as Bitmap)
-        savedInrent = savedInstanceState
+        setContentView(R.layout.activity_camera)
 
+        val bundle = intent.getBundleExtra("bundle")
+        if (bundle == null) {
+            Log.d(TAG, "Intent extras is null")
+            finish()
+            return
+        }
+        previous = findViewById(R.id.preview)
+        cancelBtn = findViewById(R.id.cancel)
+        recognizeBtn = findViewById(R.id.recognize)
+
+        cancelBtn.setOnClickListener { onCanselPressed() }
+        recognizeBtn.setOnClickListener { onRecognizePressed() }
+
+
+        dataImage = bundle.getByteArray(IMAGE_FROM_CAMERA) ?: return
+        dataToken = bundle.getString(TOKEN)
+        val readyImage = BitmapFactory.decodeByteArray(dataImage, 0, dataImage.size)
+
+        previous.setImageBitmap(readyImage)
     }
 
     private fun onRecognizePressed() {
-        val intent = Intent()
-        intent.putExtra("data", savedInrent?.getBundle("data"))
-        setResult(RESULT_OK, intent)
-        finish()
+        if (dataToken == null) {
+            Log.d(TAG, "DataToken is null")
+            finish()
+            return
+        }
+
+        GlobalScope.launch {
+            val loaderPhoto = LoaderDataFromServer()
+            val foundProduct = loaderPhoto.checkPhoto(dataToken!!, dataImage)
+
+            runOnUiThread{
+                val intent = Intent()
+                val bundle = Bundle()
+                if(foundProduct == null){
+                    bundle.putString(FOUND_PRODUCT_NAME, null)
+                    bundle.putInt(FOUND_PRODUCT_ID, -1)
+
+                }else{
+                    bundle.putString(FOUND_PRODUCT_NAME, foundProduct.productName)
+                    bundle.putInt(FOUND_PRODUCT_ID, foundProduct.productId)
+                }
+                intent.putExtra("bundle", bundle)
+                setResult(RESULT_OK, intent)
+                finish()
+            }
+        }
+
+
+//
     }
+
+    //             {
+//                Log.d(TAG, "RunOnUIThread: ${foundProduct == null}")
+//                if (foundProduct == null) {
+//                    showInfo(applicationContext, "Продукт не найден")
+//                } else {
+//                    showInfo(applicationContext, "Продукт ${foundProduct.productName} вычеркнут")
+//                    productStorage.remove(foundProduct.productId)
+//                    val correctedProducts =
+//                        productStorage.getProducts().filter { p -> !p.isRemoved() }
+//                    productStorage.updateProducts(correctedProducts as ArrayList<ProductItem>)
+//                    unredadapter.notifyDataSetChanged()
+//                }
+//            }
 
     private fun onCanselPressed() {
         finish()
