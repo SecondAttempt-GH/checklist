@@ -76,24 +76,7 @@ class CameraActivity : AppCompatActivity() {
                 finish()
             }
         }
-
-
-//
     }
-
-    //             {
-//                Log.d(TAG, "RunOnUIThread: ${foundProduct == null}")
-//                if (foundProduct == null) {
-//                    showInfo(applicationContext, "Продукт не найден")
-//                } else {
-//                    showInfo(applicationContext, "Продукт ${foundProduct.productName} вычеркнут")
-//                    productStorage.remove(foundProduct.productId)
-//                    val correctedProducts =
-//                        productStorage.getProducts().filter { p -> !p.isRemoved() }
-//                    productStorage.updateProducts(correctedProducts as ArrayList<ProductItem>)
-//                    unredadapter.notifyDataSetChanged()
-//                }
-//            }
 
     private fun onCanselPressed() {
         finish()
