@@ -1,9 +1,12 @@
 package ru.samsung.case2022.ui
 
+import android.content.ContentValues
 import android.content.Intent
 import android.content.pm.PackageManager
 import android.graphics.Bitmap
+import android.net.Uri
 import android.os.Bundle
+import android.provider.MediaStore
 import android.util.Log
 import android.view.Menu
 import android.view.View
@@ -48,6 +51,8 @@ class RootActivity : AppCompatActivity() {
     private lateinit var binding: ActivityMainBinding
     private lateinit var layoutManager: LinearLayoutManager
     private lateinit var unredadapter: FoodUnRedactableAdapter
+    private var currentImageUri: Uri? = null
+
     private val productStorage: ProductStorage
         get() = (applicationContext as App).productStorage
     private var tokenHandler: TokenHandler = TokenHandler(this)
@@ -110,7 +115,7 @@ class RootActivity : AppCompatActivity() {
     }
 
     private fun initApp() {
-        checkCameraPermission()
+//        checkCameraPermission()
 
         GlobalScope.launch {
             val token = tokenHandler.getToken() ?: return@launch
@@ -140,7 +145,13 @@ class RootActivity : AppCompatActivity() {
     }
 
     private fun onPhotoPressed() {
-        val intent = Intent("android.media.action.IMAGE_CAPTURE")
+        val values = ContentValues()
+        values.put(MediaStore.Images.Media.TITLE, "NewPhoto")
+        values.put(MediaStore.Images.Media.DESCRIPTION, "FromCamera")
+
+        currentImageUri = contentResolver.insert(MediaStore.Images.Media.EXTERNAL_CONTENT_URI, values)
+        val intent = Intent(MediaStore.ACTION_IMAGE_CAPTURE)
+        intent.putExtra(MediaStore.EXTRA_OUTPUT, currentImageUri)
         startActivityForResult(intent, REQUEST_CAMERA)
     }
 
@@ -243,16 +254,20 @@ class RootActivity : AppCompatActivity() {
         //ответ с камеры
         else if (requestCode == REQUEST_CAMERA && resultCode == RESULT_OK) {
             val intent = Intent(this, CameraActivity::class.java)
-            val imageBitmap: Bitmap = data?.extras?.get("data") as Bitmap
-            val byteArrayImage = getByteArray(imageBitmap)
+            try {
+                val imageBitmap = MediaStore.Images.Media.getBitmap(contentResolver, currentImageUri)
+                val byteArrayImage = getByteArray(imageBitmap)
 
-            GlobalScope.launch {
-                val bundle = Bundle()
-                bundle.putString(TOKEN, tokenHandler.getToken())
-                bundle.putByteArray(IMAGE_FROM_CAMERA, byteArrayImage)
+                GlobalScope.launch {
+                    val bundle = Bundle()
+                    bundle.putString(TOKEN, tokenHandler.getToken())
+                    bundle.putByteArray(IMAGE_FROM_CAMERA, byteArrayImage)
 
-                intent.putExtra("bundle", bundle)
-                startActivityForResult(intent, PREVIEW_REQUEST_CODE)
+                    intent.putExtra("bundle", bundle)
+                    startActivityForResult(intent, PREVIEW_REQUEST_CODE)
+                }
+            } catch (e: java.lang.Exception) {
+                return
             }
         } else if (requestCode == PREVIEW_REQUEST_CODE && resultCode == RESULT_OK && data != null) {
             val bundle = data.getBundleExtra("bundle")
