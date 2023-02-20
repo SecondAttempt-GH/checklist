@@ -18,7 +18,7 @@
 
 
             <Button
-                android:id="@+id/save"
+                android:id="@+id/save2"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:text="save"

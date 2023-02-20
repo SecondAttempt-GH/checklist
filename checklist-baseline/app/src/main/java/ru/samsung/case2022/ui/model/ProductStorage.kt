@@ -6,6 +6,7 @@ class ProductStorage {
 
     private var products: ArrayList<ProductItem> = arrayListOf()
 
+
     fun getProducts(): ArrayList<ProductItem> {
         return products
     }

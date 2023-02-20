@@ -27,7 +27,7 @@ class EditActivity : AppCompatActivity(){
 
         supportActionBar?.title = "Редактирование списка"
         binding.backButton.setOnClickListener { onBackBttPressed() }
-        binding.ok.setOnClickListener {onOkPressed()}
+        binding.save.setOnClickListener {onOkPressed()}
         data = ProductStorage()
         (savedInstanceState?.getParcelableArrayList<ProductItem>(KEY_DATA) ?: intent.getParcelableArrayListExtra(FOOD_LIST))?.let {
             data.updateProducts(it)
