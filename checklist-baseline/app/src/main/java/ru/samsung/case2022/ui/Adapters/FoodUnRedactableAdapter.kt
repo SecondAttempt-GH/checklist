@@ -54,38 +54,6 @@ class FoodUnRedactableAdapter(
     override fun getItemCount(): Int {
         return products.getSize()
     }
-//    override fun getItem(position: Int): ProductItem? {
-//        return products.getProduct(position)
-//    }
-
-//    override fun getItemId(position: Int): Long {
-//        return products.getProduct(position)?.productId?.toLong()!!
-//    }
-
-
-
-//    override fun getCount(): Int {
-//        return products.getSize()
-//    }
-
-//    override fun getView(position: Int, convertView: View?, parent: ViewGroup): View {
-//        val binding: ItemFoodUnredactableBinding =
-//            convertView?.tag as ItemFoodUnredactableBinding? ?:
-//            createUnBinding(parent.context)
-//
-//        val product: ProductItem = getItem(position) ?: return binding.root
-//
-//        binding.productName.text = product.productName
-//        binding.foodNum.text = product.productQuantity.toString()
-//
-//        return binding.root
-//    }
-//
-//    private fun createUnBinding(context: Context): ItemFoodUnredactableBinding {
-//        val binding:ItemFoodUnredactableBinding = ItemFoodUnredactableBinding.inflate(LayoutInflater.from(context))
-//        binding.root.tag = binding
-//        return binding
-//    }
 
     override fun onClick(v: View) {
         onPressedListener.invoke(v)

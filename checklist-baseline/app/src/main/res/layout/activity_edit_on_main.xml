@@ -24,7 +24,7 @@
         app:layout_constraintTop_toBottomOf="@id/editProductName"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
-        android:inputType="text" />
+        android:inputType="number" />
 
     <Button
         android:id="@+id/remove"

@@ -11,6 +11,14 @@ class ProductStorage {
         return products
     }
 
+    fun getProductById(productId: Int) : ProductItem? {
+        val filteredProducts = products.filter { p -> p.productId == productId }
+        if (filteredProducts.isEmpty()){
+            return null
+        }
+        return filteredProducts[0]
+    }
+
     fun updateProducts(updatedProducts: ArrayList<ProductItem>) {
         products.clear()
         products = updatedProducts
@@ -63,7 +71,7 @@ class ProductStorage {
             return
         }
         val product = products[index]
-        product.remove()
+        products.remove(product)
     }
 
     fun addOnceProduct(id: Int) {

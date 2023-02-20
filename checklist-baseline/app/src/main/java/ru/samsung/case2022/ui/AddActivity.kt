@@ -29,4 +29,9 @@ class AddActivity : AppCompatActivity(){
         setResult(RESULT_OK, intent)
         finish()
     }
+
+    override fun onSupportNavigateUp(): Boolean {
+        finish()
+        return true
+    }
 }
